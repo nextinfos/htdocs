@@ -135,6 +135,10 @@
 			    position: relative;
 			    display: inline-block;
 			  }
+			  .custom-combobox-input {
+			    margin: 0;
+			    padding: 5px 10px;
+			  }
 			@media screen and (max-device-width: 480px) {
 				#menuBar {
 					height: 50px;
@@ -287,7 +291,7 @@
  	 	 	 			});
  	 			});
  	 			$( '#logoImage, #logoText' ).click(function(){
- 	 	 			document.location = "?action=index&ref=logo";
+ 	 	 			$( '#logo' ).click();
  	 			});
  			});
  		</script>
@@ -332,7 +336,7 @@
 						</div>
 					</div>
 					<div id="innerContent">
-						<button id="showMenu">Show Menu</button>
+<!-- 						<button id="showMenu">Show Menu</button> -->
 					<?php require_once $filename;?>
 					</div>
 				</div>

@@ -93,7 +93,17 @@ if($action=="get"){
 				echo $data.']	}';
 			}
 		}
-	}elseif($type=="card"){
+	} elseif($type=="insList"){
+		$strSQL = 'SELECT * FROM `instructor`;';
+		$objQuery = mysql_query($strSQL);
+		$data = '<option value="0">ไม่ระบุ</option>';
+		if(mysql_num_rows($objQuery)>=1){
+			while($row = mysql_fetch_array($objQuery)){
+				$data.='<option value="'.$row['instructorID'].'">'.$row['firstName'].' '.$row['lastName'].'</option>';
+			}
+		}
+		echo $data;
+	} elseif($type=="card"){
 		if($studentID){
 			echo getCardInfo($studentID);
 		}
@@ -226,6 +236,18 @@ if($action=="get"){
 		if($objQuery){
 			echo '{"status":"success"}';
 		}
+	} elseif($type='addStudent'){
+		$studentID = $_POST['studentID'];
+		$personalID = $_POST['personalID'];
+		$firstName = $_POST['firstName'];
+		$lastName = $_POST['lastName'];
+		$gender = $_POST['gender'];
+		$cardID = $_POST['cardID'];
+		$secondCardID = $_POST['secondCardID'];
+		$gradeYear = $_POST['gradeYear'];
+		$instructorID = $_POST['instructorID'];
+		$password = randomPassword(6);
+		$status = 'NORMAL';
 	} elseif($type=='regStudent'){
 		$term = $_POST['term'];
 		$year = $_POST['year'];
