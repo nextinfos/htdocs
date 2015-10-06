@@ -112,7 +112,6 @@ if($action=="get"){
 		}
 	} elseif($type=="regInsSubList"){
 		$term = getTerm();
-		$month = date("m");
 		$year = getYear();
 		$strSQL = 'SELECT * FROM `register-subject` regsub, `registerinfo` reg WHERE reg.registerID = regsub.registerID AND reg.term="'.$term.'" AND reg.year="'.$year.'" AND regsub.instructorID="'.$instructorID.'";';
 		$objQuery = mysql_query($strSQL);
