@@ -391,8 +391,11 @@ function getRegSubList(){
 			//getRegSubList();
 			if($('#subject').val()!=0){
 				studentListVar.ajax.reload();
-				$('.studentListContainer').show("fold", 500);
-				$('input[name=submit]').show("blind", 500);
+				$('.studentListContainer').show("blind", 500);
+				$('input[name=submit]').show("fade", 500);
+				$('html,body,.mainContainer').animate({
+			          scrollTop: $( '#studentList').offset().top
+		        }, 1000, 'swing');
 			} else {
 				alert('กรุณาเลือกวิชา');
 			}
@@ -401,6 +404,7 @@ function getRegSubList(){
 			event.preventDefault();
 			if($( "input[type='radio']:checked","#term" ).val()&&$('#year').val()&&$('#subject').val()!=0){
 				if($('table#studentList>tbody>tr>td').html()>0){
+					$('#loading' ).show('fade', '', '100');
 					$.post( "dataCenter.php", {
 						action: "set",
 						type: "regStudent",
@@ -408,7 +412,22 @@ function getRegSubList(){
 						year: $('#year').val(),
 						subjectID: $('#subject').val()
 					}, function(data){
-						console.log(data);
+						var text;
+						if(data=='OK'){
+							text = 'ลงทะเบียนนักเรียนเข้าสู่รายวิชาเรียบร้อยแล้ว';
+							$('.studentListContainer').hide("blind", 500);
+							$('input[name=submit]').hide("fade", 500);
+						} else if(data=='UNVALID'){
+							text = 'กรุณาเลือก ภาคการศึกษา, ปีการศึกษา และ วิชา ให้ครบถ้วน';
+						} else if(data=='ERROR'){
+							text = 'ข้อผิดพลาด : ไม่สามารถบันทึกข้อมูลได้ กรุณาติดต่อผู้พัฒนา';
+						} else {
+							text = 'ข้อผิดพลาด : ไม่ทราบปัญหา';
+						}
+						setTimeout(function(){
+							alert(text);
+							$('#loading' ).hide('fade', '', '1000');
+						},800);
 					});
 				} else {
 					alert('ไม่พบรายชื่อนักเรียนที่ตรงกับเงื่อนไขวิชา');
