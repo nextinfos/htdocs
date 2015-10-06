@@ -63,4 +63,30 @@
 		}
 		return $return;
 	}
+	function getTerm(){
+		// $date = date('m-d');
+// 		$date=date('m-d', strtotime("06/05"));;
+		$term1Begin = date('m-d', strtotime("05/18"));
+		$term1End = date('m-d', strtotime("10/10"));
+		$term2Begin = date('m-d', strtotime("11/02"));
+		$term2End = date('m-d', strtotime("03/25"));
+		if (($date > $term1Begin) && ($date < $term1End)) {
+			$tern = 1;
+		} elseif(($date > $term2Begin) && ($date < $term2End)) {
+			$tern = 2;
+		} else {
+			$tern = 3;
+		}
+		return $term;
+	}
+	function getYear(){
+		$year = date("Y");
+		if($month<=5) $year--;
+		return $year;
+	}
+	function radioTerm($t){
+		$check = '';
+		if(getTerm()==$t) $check = ' checked';
+		return $check;
+	}
 ?>

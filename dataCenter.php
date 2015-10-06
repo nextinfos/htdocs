@@ -110,6 +110,20 @@ if($action=="get"){
 			}
 			echo $data.']	}';
 		}
+	} elseif($type=="regInsSubList"){
+		$term = getTerm();
+		$month = date("m");
+		$year = getYear();
+		$strSQL = 'SELECT * FROM `register-subject` regsub, `registerinfo` reg WHERE reg.registerID = regsub.registerID AND reg.term="'.$term.'" AND reg.year="'.$year.'" AND regsub.instructorID="'.$instructorID.'";';
+		$objQuery = mysql_query($strSQL);
+		if(mysql_num_rows($objQuery)>=1){
+			while($row = mysql_fetch_array($objQuery)){
+				$data.='<option value="'.$row['subjectID'].'">'.$row['subjectID'].' '.$row['name'].'('.($row['type']=='BASIC'?'พื้นฐาน':'เพิ่มเติม').')</option>';
+			}
+		} else {
+			$data = '<option value="0">ไม่พบวิชา</option>';
+		}
+		echo $data;
 	} elseif($type=="autoComplete"){
 		$source=$_POST['source'];
 		$data = $_POST['data'];
@@ -136,9 +150,32 @@ if($action=="get"){
 				$data.='<option value="'.$row['subjectID'].'">'.$row['subjectID'].' '.$row['name'].'('.($row['type']=='BASIC'?'พื้นฐาน':'เพิ่มเติม').')</option>';
 			}
 		} else {
-			$data = '<option>ไม่พบวิชา</option>';
+			$data = '<option value="0">ไม่พบวิชา</option>';
 		}
 		echo $data;
+	} elseif($type=='stuCanReg'){
+		$subjectID = $_POST['subjectID'];
+		$term = $_POST['term'];
+		$year = $_POST['year'];
+		if($subjectID&&$term&&$year){
+			$strSQL = "SELECT stu.studentID AS studentID, stu.firstName AS firstName, stu.lastName AS lastName, stu.gradeYear AS gradeYear FROM `register-subject` regsub, `registerinfo` reg, `student` stu WHERE reg.registerID = regsub.registerID AND reg.term='$term' AND reg.year='$year' AND regsub.subjectID = '$subjectID' AND regsub.gradeYear = stu.gradeYear AND stu.status='NORMAL';";
+			$objQuery = mysql_query($strSQL);
+			if(mysql_num_rows($objQuery)>=1){
+				$i=0;
+				while($row = mysql_fetch_array($objQuery)){
+					$data['data'][$i] = $row;
+					$data['data'][$i]['gradeYear'] = getGradeYearName($row['gradeYear']);
+					$i++;
+				}
+				echo json_encode($data);
+			} else {
+				$data['data'][] = array("studentID"=>"","firstName"=>"ไม่พบ","lastName"=>"","gradeYear"=>"");
+				echo json_encode($data);
+			}
+		} else {
+			$data['data'][] = array("studentID"=>"","firstName"=>"","lastName"=>"","gradeYear"=>"");
+			echo json_encode($data);
+		}
 	}
 } elseif($action=="set"){
 	if($type=="atdList"){
@@ -189,6 +226,11 @@ if($action=="get"){
 		if($objQuery){
 			echo '{"status":"success"}';
 		}
+	} elseif($type=='regStudent'){
+		$term = $_POST['term'];
+		$year = $_POST['year'];
+		$subjectID = $_POST['subjectID'];
+		echo "$term/\n/$year/\n/$subjectID";
 	}
 } else {
 ?>
