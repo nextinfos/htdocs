@@ -130,7 +130,7 @@ $(function(){
 	#subjectList_filter input[type="search"] {
 		font-size: 8pt;
 	}
-	#ssubjectList_info, #subjectList_length {
+	#subjectList_info, #subjectList_length {
 		padding-left: 20px;
 	}
 	#subjectList_paginate {
@@ -317,14 +317,59 @@ $(function(){
 	  #subject-button {
 	  	font-weight: normal !important;
 	  }
+	  .studentListContainer {
+		padding-left: 0px;
+		padding-right: 0px;
+		display: none;
+		max-width: 960px;
+		margin: auto;
+	}
+	#studentList_filter {
+		padding-right: 20px;
+	}
+	#studentList_filter input[type="search"] {
+		font-size: 8pt;
+	}
+	#studentList_info, #studentList_length {
+		padding-left: 20px;
+	}
+	#studentList_paginate {
+		padding-right: 20px;
+	}
+	input[name=submit]{
+		display: none;
+	}
   </style>
 <script>
+function getRegSubList(){
+	console.log('Function getRegSubList Called.');
+	$( "#subject" ).load( "dataCenter.php", { "action": "get", "type":"regSubList", "term":$( "input[type='radio']:checked","#term" ).val(), "year":$( "#year" ).val() } , function( response, status, xhr ) {
+		$( "#subject" ).selectmenu( "refresh" );
+		console.log('Select menu "subject" was refreshed.');
+	});
+}
 	$(function(){
-		function getRegSubList(){
-			$( "#subject" ).load( "dataCenter.php", { "action": "get", "type":"regSubList", "term":$( "input[type='radio']:checked","#term" ).val(), "year":$( "#year" ).val() } , function( response, status, xhr ) {
-				$( "#subject" ).selectmenu( "refresh" );
-			});
-		}
+		var term = $( "input[type='radio']:checked","#term" ).val();
+		var year = $('#year').val();
+		var subjectID = $( "#subject" ).val();
+		studentListVar = $('#studentList').DataTable( {
+			paging: false,
+		    scrollY: 370,
+		    "order": [0,'asc'],
+//			    "orderFixed": [2,'desc'],
+		    "columns": [{ data: "studentID","orderable": true },{ data: "firstName","orderable": true },{ data: "lastName","orderable": true },{ data: "gradeYear","orderable": false}],
+		    ajax:  {
+	            url: "dataCenter.php",
+	            type: 'POST',
+	            data: function ( d ) {
+	                d.action = "get";
+	                d.type = "stuCanReg";
+	                d.term = $( "input[type='radio']:checked","#term" ).val();
+	                d.year = $( "#year" ).val();
+	                d.subjectID = $( "#subject" ).val();
+	            }
+	        }
+		});
 		$( "#term" ).buttonset();
 		$( "#year" ).selectmenu({
 			change: function( event, ui ) {
@@ -339,21 +384,49 @@ $(function(){
 		getRegSubList();
 		$( "button","#searchRegSub" ).button({
 			icons: {
-				primary: "ui-icon-locked"
-			},
-			click: function( event, ui){
-				event.preventDefault();
-				getRegSubList();
+				primary: "ui-icon-search"
+			}
+		}).click(function( event, ui){
+			event.preventDefault();
+			//getRegSubList();
+			if($('#subject').val()!=0){
+				studentListVar.ajax.reload();
+				$('.studentListContainer').show("fold", 500);
+				$('input[name=submit]').show("blind", 500);
+			} else {
+				alert('กรุณาเลือกวิชา');
 			}
 		});
+		$( '#studentRegistrar' ).submit(function(event){
+			event.preventDefault();
+			if($( "input[type='radio']:checked","#term" ).val()&&$('#year').val()&&$('#subject').val()!=0){
+				if($('table#studentList>tbody>tr>td').html()>0){
+					$.post( "dataCenter.php", {
+						action: "set",
+						type: "regStudent",
+						term: $( "input[type='radio']:checked","#term" ).val(),
+						year: $('#year').val(),
+						subjectID: $('#subject').val()
+					}, function(data){
+						console.log(data);
+					});
+				} else {
+					alert('ไม่พบรายชื่อนักเรียนที่ตรงกับเงื่อนไขวิชา');
+				}
+			} else {
+				alert('กรุณาเลือกภาคการศึกษา, ปีการศึกษา และ วิชา');
+			}
+		});
+		$('fieldset').addClass("ui-corner-all");
+		$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
 	});
 </script>
 <h1>ลงทะเบียนนักเรียนเข้าวิชาเรียน</h1>
 <?php if($result) if($error) echo '<span class="error">'.$result.'</span>'; else echo '<span class="pass">'.$result.'</span>';?>
-	<form method="POST">
+	<form method="POST" id="studentRegistrar">
 	<div id="formHolder">
 		<div class="leftCell">ภาคการศึกษา : </div>
-		<div id="term"><input type="radio" name="term" id="t1" value="1"/><label for="t1">1</label><input type="radio" name="term" id="t2" value="2"/><label for="t2">2</label><input type="radio" name="term" id="t3" value="3"/><label for="t3">3</label></div>
+		<div id="term"><input type="radio" name="term" id="t1" value="1"<?php echo radioTerm(1);?>/><label for="t1">1</label><input type="radio" name="term" id="t2" value="2"/><label for="t2">2</label><input type="radio" name="term" id="t3" value="3"/><label for="t3">3</label></div>
 		<div class="spacer"></div>
 		<div class="leftCell">ปีการศึกษา : </div>
 		<div>
@@ -365,12 +438,31 @@ $(function(){
 		<div class="leftCell">วิชา :</div> 
 		<div>
 			<select name="subject" id="subject">
-				<option>กรุณาเลือกภาคการศึกษาและปีการศึกษา</option>
+				<option value="0">กรุณาเลือกภาคการศึกษาและปีการศึกษา</option>
 			</select>
 		</div>
 		<div class="spacer"></div>
 	</div>
 	<div id="searchRegSub" style="margin: auto;"><button>ค้นหา</button></div>
+	<div class="spacer"></div>
+	<div>
+		<fieldset class="studentListContainer">
+  			<legend style="margin-left:12px;">รายชื่อวิชาในระบบ</legend>
+  			<div>
+	 			<table id="studentList" class="display" style="width:100%">
+	 				<thead>
+						<tr class="ui-state-default">
+							<th style="width: 100px;">รหัสนักเรียน</th>
+							<th>ชื่อ</th>
+							<th>นามสกุล</th>
+							<th style="width: 120px;">ระดับชั้น</th>
+						</tr>
+	 				</thead>
+	 			</table>
+ 			</div>
+		</fieldset>
+	</div>
+	<div class="spacer"></div>
 	<div style="margin: auto;"><input type="submit" name="submit" value="บันทึก" /></div>
 	</form>
 <?php
