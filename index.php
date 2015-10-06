@@ -168,7 +168,8 @@
 				position: absolute;
 				top: 0px;
 				left: 0px;
-				background: rgba(0,0,0,0.3)
+				background: rgba(0,0,0,0.3);
+				z-index: 99;
 			}
 			#loading>div.spinnerHolder {
 				position: absolute;
@@ -274,8 +275,8 @@
  		<script>
  			$(function(){
  				$( 'document' ).ready(function(){
- 					$('#loading' ).effect('fade', '', '1000');
- 					$('.mainContainer' ).effect('fade', '', '1500');
+ 					$('#loading' ).hide('fade', '', '1000');
+ 					$('.mainContainer' ).show('fade', '', '1500');
  				});
  	 			$('#logout').click(function(){
  	 				$('body' ).addClass( "blur", 1000);
