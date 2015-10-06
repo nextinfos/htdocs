@@ -81,6 +81,7 @@
 	}
 	function getYear(){
 		$year = date("Y");
+		$month = date("m");
 		if($month<=5) $year--;
 		return $year;
 	}
