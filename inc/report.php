@@ -1,13 +1,41 @@
+<?php
+	$type = $_GET['type']; 
+?>
 <style>
-			div.tablelHolder {
-				margin: auto;
-				width: 300px;
-				font-size: 1em;
-				text-align: center;
-			}
-			#scoreInfoConf {
-				display: none;
-			}
+	div.tablelHolder {
+		margin: auto;
+		width: 300px;
+		font-size: 1em;
+		text-align: center;
+	}
+	#scoreInfoConf {
+		display: none;
+	}
+	.studentListContainer {
+		padding-left: 0px;
+		padding-right: 0px;
+/* 		display: none; */
+		max-width: 960px;
+		margin: auto;
+	}
+	#studentList_filter {
+		padding-right: 20px;
+	}
+	#studentList_filter input[type="search"] {
+		font-size: 8pt;
+	}
+	#studentList_info, #studentList_length {
+		padding-left: 20px;
+	}
+	#studentList_paginate {
+		padding-right: 20px;
+	}
+	fieldset>legend {
+		text-align: center;
+	}
+	.dataTableShow, .statusHolder {
+		background-color: white;
+	}
 </style>
 <script>
   $(function() {
@@ -20,7 +48,7 @@
     	}
    	});
     $(function() {
-        $( "input[type=submit], a, button" )
+        $( "input[type=submit], button" )
           .button()
           .click(function( event ) {
           });
@@ -36,14 +64,32 @@
         	$( '#subject' ).selectmenu('disable');
     	}
     });
+    studentListVar = $('#studentList').DataTable( {
+		paging: false,
+	    scrollY: 370,
+	    "order": [0,'asc'],
+//		    "orderFixed": [2,'desc'],
+	    "columns": [{ data: "studentID","orderable": true },{ data: "firstName","orderable": true },{ data: "lastName","orderable": true },{ data: "gradeYear","orderable": false}],
+	    ajax:  {
+            url: "dataCenter.php",
+            type: 'POST',
+            data: function ( d ) {
+                d.action = "get";
+                d.type = "stuCanReg";
+                d.term = $( "input[type='radio']:checked","#term" ).val();
+                d.year = $( "#year" ).val();
+                d.subjectID = $( "#subject" ).val();
+            }
+        }
+	});
+    $('fieldset').addClass("ui-corner-all");
+	$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
   });
 </script>
+<?php if($type=='score'){?>
 	<div class="tablelHolder">
 		<select name="subjectID" style="width:300px;" id="subject">
 			<option value="0">กำลังประมวลผล</option>
-			<?php
-// 			echo $subjectData;
-			?>
 		</select>
 	</div><br>
 	<div id="scoreInfoConf">
@@ -54,3 +100,206 @@
 			<input type="submit" value="ดูข้อมูล">
 		</div><br>
 	</div>
+	<div id="scoreEdit">
+		<div>
+			<fieldset class="studentListContainer">
+	  			<legend style="margin-left:12px;">รายชื่อนักเรียนที่ลงทะเบียน</legend>
+	  			<div>
+		 			<table id="studentList" class="display" style="width:100%">
+		 				<thead>
+							<tr class="ui-state-default">
+								<th style="width: 100px;">รหัสนักเรียน</th>
+								<th>ชื่อ</th>
+								<th>นามสกุล</th>
+								<th style="width: 120px;">ระดับชั้น</th>
+							</tr>
+		 				</thead>
+		 			</table>
+	 			</div>
+			</fieldset>
+		</div>
+	</div>
+<?php } elseif($type=attendance){
+	function microtime_float()
+	{
+		list($usec, $sec) = explode(" ", microtime());
+		return ((float)$usec + (float)$sec);
+	}
+	$lowPer = $_GET['lowPer']?$_GET['lowPer']:50;
+	$warnPer = $_GET['warnPer']?$_GET['warnPer']:65;
+	$term = $_GET['term'];
+	if(!$term) $term = getTerm();
+	$year = $_GET['year'];
+	if(!$year) $year = getYear();
+	$subjectData = "";
+	$strSQL = "SELECT sub.subjectID AS subjectID, sub.name AS name, reg.term AS term, reg.year AS year FROM `subject` sub, `register-subject` regsub, `registerinfo` reg WHERE regsub.subjectID = sub.subjectID AND regsub.instructorID = '$confUserID' AND regsub.registerID = reg.registerID AND reg.term='$term' AND reg.year = '$year';";
+	$objQuery = mysql_query($strSQL);
+	if(@mysql_num_rows($objQuery)>=1){
+		while($row = mysql_fetch_array($objQuery)){
+			$subjectData .= '<option value="'.$row['subjectID'].'">'.$row['subjectID'].' '.$row['name'].'</option>';
+			if($_GET['subjectID']){
+				if($_GET['subjectID']==$row['subjectID']) $subjectInfo = $row['subjectID'].' '.$row['name'].' เทอม '.$row['term'].' ปีการศึกษา '.($row['year']+543);
+			}
+		}
+	} else {
+		$subjectData = "<option>ไม่มีวิชาเรียน</option>";
+	}
+	if($_GET['subjectID']&&$subjectInfo){
+		$subInfo = "<br/>ข้อมูลรายวิชา : $subjectInfo<br/>";
+		$report = "<hr/>";
+		$startTime = microtime_float();
+		$strSQL = "SELECT *  FROM `attendanceinfo` atd, `register-subject` regsub, `registerinfo` reg WHERE regsub.subjectID = '".$_GET['subjectID']."' AND regsub.subjectID = atd.subjectID AND regsub.registerID = atd.registerID AND atd.registerID = reg.registerID AND reg.term='$term' AND reg.year = '$year' ORDER BY atd.date;";
+		$objQuery = mysql_query($strSQL);
+		if(mysql_num_rows($objQuery)>=1){
+			$i = 0;
+			while($row = mysql_fetch_array($objQuery)){
+				$atdList[$i] = date("d/m/Y",strtotime($row['date'])).' ('.$row['attendanceID'].')';
+				$i++;
+			}
+		} else {
+			$atdList[0] = 'ไม่พบข้อมูล';
+		}
+		mysql_free_result($objQuery);
+		$strSQL = "SELECT stu.studentID AS studentID,stu.firstname AS firstName,stu.lastname AS lastName  FROM `student` stu, `register-subject` regsub WHERE regsub.subjectID = '".$_GET['subjectID']."' AND stu.studentID IN (SELECT regstu.studentID FROM `register-student` regstu WHERE regstu.subjectID = regsub.subjectID AND regstu.registerID = regsub.registerID);";
+		$objQuery = mysql_query($strSQL);
+		if(mysql_num_rows($objQuery)>=1){
+			$report.='<table border="1" cellspacing="0" class="dataTableShow">'."\n";
+			$report.='<thead><tr><th>รหัสนร.</th><th>ชื่อ - สกุล</th>'."\n";
+			foreach($atdList as $key => $value) {
+				$report.= "<th><div class=\"ah\"><span>$value</span><div></th>\n";
+			}
+			$report.='<th>มา</th><th>สาย</th><th>ขาด</th><th>%</th></tr></thead>'."\n";
+			while($row = mysql_fetch_array($objQuery)){
+				$studentID = $row['studentID'];
+				$intime=0;
+				$late=0;
+				$reportr='';
+				$rowClass='';
+// 				$strSQLa = "SELECT *  FROM `attendanceinfo` atd, `register-subject` regsub WHERE regsub.subjectID = '".$_GET['subjectID']."' AND regsub.registerID = atd.registerID ORDER BY atd.date;";
+				$strSQLa = "SELECT *  FROM `attendanceinfo` atd, `register-subject` regsub, `registerinfo` reg WHERE regsub.subjectID = '".$_GET['subjectID']."' AND regsub.subjectID = atd.subjectID AND regsub.registerID = atd.registerID AND atd.registerID = reg.registerID AND reg.term='$term' AND reg.year = '$year' ORDER BY atd.date;";
+				$objQuerya = mysql_query($strSQLa);
+				if(mysql_num_rows($objQuerya)>=1){
+					while($rowa = mysql_fetch_array($objQuerya)){
+						$atdID = $rowa['attendanceID'];
+						$strSQLi = "SELECT status  FROM `studentattendance` stuatd WHERE stuatd.studentID = '".$studentID."' AND stuatd.attendanceID = '".$atdID."';";
+						$objQueryi = mysql_query($strSQLi);
+						$numbRowInfo = mysql_num_rows($objQueryi);
+						if($numbRowInfo==1){
+							while($rowi = mysql_fetch_array($objQueryi)){
+								$status = $rowi['status']=='ONTIME'?'<img class="icon" src="images/correct.png">':'<img class="icon" src="images/warning.png">';
+								if($rowi['status'] == 'ONTIME') $intime++;
+								if($rowi['status'] == 'LATE') $late++;
+								$reportr.='<td>'.$status.'</td>';
+							}
+						} elseif($numbRowInfo==0) {
+							$reportr.='<td><img class="icon" src="images/incorrect.png"></td>'."\n";
+						} else {
+							$reportr.='<td>--</td>'."\n";
+						}
+					}
+				} else {
+					$reportr.='<td colspan="'.sizeof($atdList).'">ERROR</td>'."\n";
+				}
+				$abs = sizeof($atdList)-($intime+$late);
+				$per = round(($intime+$late)/sizeof($atdList)*100,2);
+				if($per<=$warnPer&&$per>$lowPer){
+					$per = '<span class="warnPer">'.$per.'</span>';
+					$rowClass = 'warn';
+				} elseif($per<=$lowPer){
+					$per = '<span class="lowPer">'.$per.'</span>';
+					$rowClass = 'low';
+				} else {
+					$rowClass = 'pass';
+				}
+				$report.='<tr class="'.$rowClass.'"><td>'.$row['studentID'].'</td><td>'.$row['firstName'].'&nbsp;&nbsp;&nbsp;'.$row['lastName'].'</td>'."\n".$reportr;
+				$report.="<td>$intime</td><td>$late</td><td>$abs</td><td>$per%</td>\n";
+				$report.='</tr>'."\n";
+			}
+			$report.='</table>'."\n";
+		} else {
+			$report.="ไม่พบข้อมูล";
+		}
+		mysql_free_result($objQuery);
+		mysql_free_result($objQuerya);
+		mysql_free_result($objQueryi);
+		$stopTime = microtime_float();
+		$usedTime = $stopTime-$startTime;
+		$report.='<div class="statusHolder"><div class="status low">ไม่มีสิทธิ์สอบ</div><div class="status warn">สุ่มเสี่ยง</div><div class="status pass">ผ่าน</div></div>';
+		$report.='<hr/><span class="noPrint">ใช้เวลาประมวลผลทั้งหมด '.$usedTime.' วินาที</span>';
+	}
+	?>
+<style>
+			.lowPer {
+				color: red;
+				font-weight: bold;
+			}
+			.warnPer {
+				color: chocolate;
+			}
+			.low { background-color: rgba(255,0,0,0.3);}
+			.warn { background-color: rgba(255,255,0,0.3);}
+			.pass { background-color: rgba(0,255,0,0.3);}
+			input[type=number] {
+				width: 30px;
+			}
+			img.icon {
+				width: 15px;
+				height: 15px;
+			}
+			div.ah>span {
+				writing-mode: lr-tb;
+				-webkit-transform: rotate(-90deg);
+				transform: rotate(-90deg);
+				display:block;
+				width: 150px;
+				height: 15px;
+				position: relative;
+				left: -68px;
+			}
+			div.ah {
+				position: relative;
+				width: 15px;
+			}
+			th {
+				height: 150px;
+			}
+			.statusHolder {
+				display: block;
+				margin: auto;
+				padding: 15px;
+				width: 450px;
+			}
+			.status {
+				width: 150px;
+				text-align: center;
+				border: 1px solid black;
+				padding: 5px;
+				margin: 15px;
+				display: table-cell;
+			}
+			@media print {
+				.noPrint {
+					display: none;
+				}
+			}
+		</style>
+		<div class="noPrint">
+		<form method="GET">
+			<input type="hidden" name="action" value="report" />
+			<input type="hidden" name="type" value="attendance" />
+			<input type="radio" name="term" value="1"<?php echo $term==1?' checked':radioTerm(1);?>>1
+			<input type="radio" name="term" value="2"<?php echo $term==2?' checked':radioTerm(2);?>>2
+			<input type="radio" name="term" value="3"<?php echo $term==3?' checked':radioTerm(3);?>>3
+			<select name="year">
+				<?php $year = date("Y"); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
+			</select>
+			<select name="subjectID">
+				<?php echo $subjectData;?>
+			</select><br/>
+			หมดสิทธ์สอบเมื่อเข้าเรียนต่ำกว่า : <input type="number" value="50" step="5" name="lowPer">%<br/>
+			แจ้งเตือนเมื่อเข้าเรียนต่ำกว่า : <input type="number" value="65" step="5" name="warnPer">%<br/>
+			<input type="submit" value="ดูข้อมูล">
+		</form>
+		</div>
+		<?php echo $subInfo.$report;?>
+<?php }?>
