@@ -422,7 +422,7 @@ function getRegSubList(){
 						} else if(data=='ERROR'){
 							text = 'ข้อผิดพลาด : ไม่สามารถบันทึกข้อมูลได้ กรุณาติดต่อผู้พัฒนา';
 						} else {
-							text = 'ข้อผิดพลาด : ไม่ทราบปัญหา';
+							text = 'ข้อผิดพลาด : ไม่ทราบปัญหา\n['+data+']';
 						}
 						setTimeout(function(){
 							alert(text);

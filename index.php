@@ -165,6 +165,9 @@
 				#innerContent {
 					padding-top: 0px;
 				}
+				.outer-nav a {
+					font-size: 1em;
+				}
 			}
 			#loading {
 				min-height: 100%;
@@ -343,11 +346,23 @@
 			</div>
 			<nav class="outer-nav right vertical">
 				<a href="?action=index&ref=menu" class="icon-home">หน้าหลัก</a>
-				<a href="?action=subjectManager" class="icon-book">จัดการวิชา</a>
-				<a href="#" class="icon-image">Images</a>
-				<a href="#" class="icon-upload">Uploads</a>
+				<?php if($confUserType=="instructor"){?>
+				<?php		if($confSuperUser=="1"){?>
+				<a href="?action=subjectManager&tag=add" class="icon-plus">เพิ่มรายวิชา</a>
+				<a href="?action=subjectManager&tag=edit" class="icon-pencil">แก้ไขรายวิชา</a>
+				<a href="?action=subjectManager&tag=subjectRegistrar" class="icon-book">เปิดรายวิชา</a>
+				<a href="?action=subjectManager&tag=studentRegistrar" class="icon-persons">ลงทะเบียนนร.</a>
+				<a href="?action=studentManager&tag=add" class="icon-personadd">เพิ่มข้อมูลนร.</a>
+				<a href="#" class="icon-personadd">เพิ่มข้อมูลครู</a>
+				<?php 		} else {?>
+				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
+				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
+				<?php 		}?>
+				<a href="?action=report" class="icon-pie-outline">รายงาน</a>
+				<?php } else {?>
 				<a href="#" class="icon-star">Favorites</a>
 				<a href="#" class="icon-mail">Messages</a>
+				<?php }?>
 				<?php if($confUserID) echo '<a href="#" id="logout" class="icon-lock">ออกจากระบบ</a>';?>
 			</nav>
  		</div>
