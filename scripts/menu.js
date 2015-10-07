@@ -38,7 +38,7 @@
 		clickevent = mobilecheck() ? 'touchstart' : 'click';
 
 	function init() {
-		var showMenu = document.getElementById( 'showMenu' ),
+		var showMenu = document.getElementById( 'logo' ),
 			perspectiveWrapper = document.getElementById( 'perspective' ),
 			container = perspectiveWrapper.querySelector( '.container' ),
 			contentWrapper = container.querySelector( '.wrapper' );
