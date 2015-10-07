@@ -132,6 +132,7 @@ html, body, .perspective {
 	transition: color 0.3s;
 	-webkit-transform-style: preserve-3d;
 	transform-style: preserve-3d;
+	font-size: 0.7em;
 }
 
 .outer-nav a:hover {
@@ -169,8 +170,13 @@ html, body, .perspective {
 .icon-star::before { content: "\e604" }
 .icon-mail::before { content: "\e605" }
 .icon-lock::before { content: "\e0a1" }
-.icon-chart-pie::before { content: "\e607" }
+.icon-pie-outline::before { content: "\e044" }
 .icon-book::before { content: "\e0bf" }
+.icon-personadd::before { content: "\e127" }
+.icon-persons::before { content: "\e082" }
+.icon-link-outline::before { content: "\e09b" }
+.icon-pencil::before { content: "\e0c3" }
+.icon-plus::before { content: "\e0ce" }
 
 /* Individual Effects */
 

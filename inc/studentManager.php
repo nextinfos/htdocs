@@ -48,6 +48,54 @@
 		});
 		$( "#studentRegistrar" ).submit(function(event){
 			event.preventDefault();
+			var studentID = $( '#studentID' ).val(),
+			personalID = $( '#personalID' ).val(),
+			firstName = $( '#firstName' ).val(),
+			lastName = $( '#lastName' ).val(),
+			gender = $( "input[type='radio']:checked", '#gender' ).val(),
+			cardID = $( '#cardID' ).val(),
+			secondCardID = $( '#secondCardID' ).val(),
+			gradeYear = $( '#gradeYear' ).val(),
+			instructorID = $( '#instructorID' ).val();
+			if(studentID!=''&&personalID!=''&&firstName!=''&&lastName!=''&&gender!=''&&gradeYear!=''&&instructorID!=''){
+				if(cardID==''||secondCardID==''){
+					if(cardID==''){
+						while(cardID.length<10){
+							cardID = prompt('กรอกรหัส RFID 10 หลักแรก หรือ แตะบัตรที่เครื่อง A\n(เว้นว่างไว้หากยังไม่ต้องการผู้บัตร)');
+							if(cardID=='') break;
+							if($.isNumeric(cardID)==false) cardID = '';
+						}
+					}
+					if(secondCardID==''&&cardID!=''){
+						while(secondCardID.length<8) {
+							secondCardID = prompt('กรอกรหัส RFID 8 หลักหลัง หรือ แตะบัตรที่เครื่อง B)');
+							if(secondCardID=='') break;
+							if($.isNumeric(secondCardID)==false) secondCardID = '';
+						}
+					}
+					if(cardID!=''&&secondCardID!=''){
+						alert('ข้อมูลบัตร RFID เป็นดังนี้\nรหัส 10 หลักแรก : '+cardID+'\nรหัส  8 หลักหลัง : '+secondCardID);
+					} else {
+						cardID = '';
+						secondCardID = '';
+					}
+					$.post("dataCenter.php",{
+							action: 'set',
+							type: 'addStudent',
+							'studentID': studentID,
+							'personalID': personalID,
+							'firstName': firstName,
+							'lastName': lastName,
+							'gender': gender,
+							'cardID': cardID,
+							'secondCardID': secondCardID,
+							'gradeYear': gradeYear,
+							'instructorID': instructorID},
+						function(data){
+								console.log(data);
+					});
+				}
+			}
 		});
 	});
 </script>
@@ -59,7 +107,7 @@
 			<div><input type="text" name="studentID" id="studentID" placeholder="1234" required /></div>
 			<div class="spacer"></div>
 			<div class="leftCell">เลขประจำตัวประชาชน :</div>
-			<div><input type="text" name="personalD" id="personaID" placeholder="8619987654321" pattern="[0-9]{13}" required /></div>
+			<div><input type="text" name="personalID" id="personalID" placeholder="8619987654321" pattern="[0-9]{13}" required /></div>
 			<div class="spacer"></div>
 			<div class="leftCell">ชื่อจริง :</div>
 			<div><input type="text" name="firstName" id="firstName" placeholder="สมชาย" required /></div>
