@@ -1,103 +1,56 @@
-<?php
-	$atdID = 1;
-	$strSQL = 'SELECT COUNT(*) AS count FROM atdlist a INNER JOIN reg_student r ON a.regSubjectID = r.regSubjectID WHERE a.atdID = "'.$atdID.'"';
-	$objQuery = mysql_query($strSQL);
-	if($objQuery){
-		$row = mysql_fetch_array($objQuery);
-		$regStudent = $row['count'];
-	}
-	$strSQL = 'SELECT COUNT(*) AS count FROM atdinfo WHERE atdID = "'.$atdID.'"';
-	$objQuery = mysql_query($strSQL);
-	if($objQuery){
-		$row = mysql_fetch_array($objQuery);
-		$chkStudent = $row['count'];
-	}
-	$strSQL = 'SELECT COUNT(*) AS count FROM atdinfo a LEFT JOIN students s ON a.studentID = s.studentID WHERE atdID = "'.$atdID.'" AND s.gender = "M"';
-	$objQuery = mysql_query($strSQL);
-	if($objQuery){
-		$row = mysql_fetch_array($objQuery);
-		$mStudent = $row['count'];
-	}
-	echo $chkStudent.'/'.$regStudent;
-?>
 <style>
-	.chart {
-		height: 300px;
-		width: 400px;
-		background: rgba(255,255,255,0.5);
-	}
-	.canvasjs-chart-credit {
-		visibility: hidden !important;
-	}
+			div.tablelHolder {
+				margin: auto;
+				width: 300px;
+				font-size: 1em;
+				text-align: center;
+			}
+			#scoreInfoConf {
+				display: none;
+			}
 </style>
-<script type="text/javascript">
-	$(function(){
-		$( ".chart" ).addClass("ui-corner-all");
-	});
-window.onload = function () {
-	CanvasJS.addColorSet("checkAbsent",
-            [
-            "#BCF5A9",
-            "#F78181"          
-            ]);
-	CanvasJS.addColorSet("gender",
-            [
-            "#8181F7",
-            "#F5A9E1"          
-            ]);
-	var absent = new CanvasJS.Chart("absent",
-	{
-		theme: "theme2",
-		title:{
-			text: "นักเรียนที่มาเรียนและขาดเรียน"
-		},
-		backgroundColor: "transparent",
-		colorSet:  "checkAbsent",
-		width: 400,
-		legend: {
-			maxWidth: 350,
-			itemWidth: 120
-		},
-		data: [
-		{
-			type: "pie",
-			showInLegend: true,
-			legendText: "{indexLabel}",
-			dataPoints: [
-				{ y: <?php echo $chkStudent;?>, indexLabel: "มาเรียน" },
-				{ y: <?php echo $regStudent-$chkStudent;?>, indexLabel: "ขาดเรียน" }
-			]
-		}
-		]
-	});
-	absent.render();
-	var checked = new CanvasJS.Chart("checked",
-			{
-				theme: "theme2",
-				title:{
-					text: "มาเรียนแบ่งตามเพศ"
-				},
-				backgroundColor: "transparent",
-				colorSet:  "gender",
-				width: 400,
-				legend: {
-					maxWidth: 350,
-					itemWidth: 120
-				},
-				data: [
-				{
-					type: "pie",
-					showInLegend: true,
-					legendText: "{indexLabel}",
-					dataPoints: [
-						{ y: <?php echo $mStudent;?>, indexLabel: "นักเรียนชาย" },
-						{ y: <?php echo $chkStudent-$mStudent;?>, indexLabel: "นักเรียนหญิง" }
-					]
-				}
-				]
-			});
-			checked.render();
-}
+<script>
+  $(function() {
+    var score = $( "#score" ).spinner({min:0});
+    $( "#subject" ).selectmenu({
+        change: function(){
+        	if($( "#subject" ).val()!=0){
+            	$( '#scoreInfoConf' ).show('blind', 500);
+        	}
+    	}
+   	});
+    $(function() {
+        $( "input[type=submit], a, button" )
+          .button()
+          .click(function( event ) {
+          });
+      });
+    $( "#subject" ).load("dataCenter.php", {
+        action: "get",
+        type: "regInsSubList"
+	}, function(){
+        $( "#subject" ).selectmenu("refresh");
+        if($( "#subject" ).val()!=0){
+        	$( '#scoreInfoConf' ).show('blind', 500);
+    	} else {
+        	$( '#subject' ).selectmenu('disable');
+    	}
+    });
+  });
 </script>
-<div class="chart" id="absent"></div>
-<div class="chart" id="checked"></div>
+	<div class="tablelHolder">
+		<select name="subjectID" style="width:300px;" id="subject">
+			<option value="0">กำลังประมวลผล</option>
+			<?php
+// 			echo $subjectData;
+			?>
+		</select>
+	</div><br>
+	<div id="scoreInfoConf">
+		<div class="tablelHolder">
+			แจ้งเตือนเมื่อคะแนนต่ำกว่า : <input type="number" style="width:50px;" value="50" step="5" name="warnPer" id="score">%
+		</div><br/>
+		<div class="tablelHolder">
+			<input type="submit" value="ดูข้อมูล">
+		</div><br>
+	</div>
