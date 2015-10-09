@@ -64,15 +64,16 @@
 		return $return;
 	}
 	function getTerm(){
-		$date = date('m-d');
-// 		$date=date('m-d', strtotime("06/05"));;
-		$term1Begin = date('m-d', strtotime("05/18"));
-		$term1End = date('m-d', strtotime("10/10"));
-		$term2Begin = date('m-d', strtotime("11/02"));
-		$term2End = date('m-d', strtotime("03/25"));
-		if (($date > $term1Begin) && ($date < $term1End)) {
+		$date = date('Y-m-d');
+// 		$date=date('Y-m-d', strtotime("10/10/".getYear()));	//--(m/d/Y)
+		$term1Begin = date('Y-m-d', strtotime("05/18/".getYear()));
+		$term1End = date('Y-m-d', strtotime("10/10/".getYear()));
+// 		$term2Begin = date('m-d', strtotime("11/02"));
+		$term2Begin = date('Y-m-d', strtotime("10/11/".getYear()));
+		$term2End = date('Y-m-d', strtotime("03/25".getYear()." +1 year"));
+		if (($date >= $term1Begin) && ($date <= $term1End)) {
 			$term = 1;
-		} elseif(($date > $term2Begin) && ($date < $term2End)) {
+		} elseif(($date >= $term2Begin) && ($date <= $term2End)) {
 			$term = 2;
 		} else {
 			$term = 3;

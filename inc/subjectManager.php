@@ -16,35 +16,6 @@
 		text-align:center;
 		padding: 10px;
 	}
-	#formHolder {
-		margin: auto;
-		display: table;
-	}
-	#formHolder>div {
-		margin: auto;
-/* 		display: block; */
-/* 		text-align: left; */
-		padding: 2px;
-	}
-	#subjectType>label {
-		width: 114px;
-		height: 33px;
-	}
-	#subjectType>label>span,#term>label>span {
-		padding-top: 5px;
-	}
-	#term>label {
-		width: 50px;
-	}
-	#year {
-		width: 150px;
-	}
-	.spacer {
-		height: 5px;
-	}
-	.leftCell {
-		padding-left: 5px !important;
-	}
 </style>
 <div id="contentContainer">
 <?php

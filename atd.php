@@ -1,14 +1,31 @@
 <?php
 	require_once 'config.php';
 	$atdID = $_SESSION["atdID"];
+	$time = $_SESSION['atdStart'];
+	$late = $_SESSION['atdLate'];
 	if(!$atdID) header("Location: index.php?action=atd&tag=create");
-	$strSQL = "SELECT a.datetime,s.code,s.name,s.instructorID,a.late,i.firstname,i.lastname FROM atdlist a INNER JOIN reg_subject r INNER JOIN subjects s INNER JOIN instructors i WHERE a.atdID = '".$atdID."' AND a.regSubjectID = r.regSubjectID AND r.subjectID = s.subjectID LIMIT 1";
+	$strSQL = "SELECT 
+							sub.subjectID AS subjectID,
+							sub.name AS subjectName,
+							ins.firstName AS insFirstName,
+							ins.lastName AS insLastName
+					 FROM 
+							`attendanceinfo` atd,
+							`subject` sub,
+							`register-subject` regsub,
+							`instructor` ins
+					WHERE
+							atd.attendanceID = '$atdID' AND
+							atd.subjectID = regsub.subjectID AND
+							atd.registerID = regsub.registerID AND
+							regsub.subjectID = sub.subjectID AND
+							regsub.instructorID = ins.instructorID";
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)==1){
 		$row = mysql_fetch_array($objQuery);
-		$subName = $row['code'].' '.$row['name'];
-		$instName = $row['firstname'].' '.$row['lastname'].' ['.$row['instructorID'].']';
-		$startDateTime = $row['datetime'].' [จนถึงเวลา '.date('H:i:s',strtotime($row['datetime'].' +'.$row['late'].' minute')).']';
+		$subName = $row['subjectID'].' '.$row['subjectName'];
+		$instName = $row['insFirstName'].' '.$row['insLastName'];
+		$startDateTime = date("H:i:s",strtotime("Today $time")).' [จนถึงเวลา '.date('H:i:s',strtotime("Today $time + $late minute")).']';
 	}
 ?>
 <!DOCTYPE html>
@@ -160,7 +177,7 @@
 				    scrollY: 280,
 				    "order": [2,'desc'],
 				    "orderFixed": [2,'desc'],
-				    "columns": [{ data: "id","orderable": false },{ data: "name","orderable": false },{ data: "time","orderable": false },{ data: "status","orderable": false }],
+				    "columns": [{ data: "id","orderable": false },{ data: "name","orderable": false },{ data: "status","orderable": false }],
 				    ajax:  {
 			            url: "dataCenter.php",
 			            type: 'POST',
@@ -223,16 +240,16 @@
 					dataType: 'json',
 					success: function(dataR){
 						console.log('checkCard Function has recived data from dataCenter.php');
-						if(dataR.status=="success"){
+						if(dataR.status=="SUCCESS"){
 							console.info('Call onSuccessAtd Function');
 							onSuccesAtd(dataR.data[0].studentID);
-					      playSound('images/sounds/pass.mp3');
+					    	playSound('images/sounds/pass.mp3');
 						} else {
 							var reason = dataR.data[0].reason;
-							if(reason == "CheckedIn") telReason = 'This student is checked in already.';
+							if(reason == "CheckedIn") telReason = 'มีชื่อนี้อยู่ในระบบแล้ว.';
 							if(reason == "NotFoundReg") telReason = 'Not Found this student in registrar.';
 							if(reason == "NotFoundCard"){
-								telReason = 'This card is not found in database.';
+								telReason = 'ไม่พบข้อมูลบัตร กรุณาติดต่อผู้ดูแล.';
 								playSound('images/sounds/cardNotFound.mp3');
 							}
 							notice(telReason);
@@ -322,7 +339,6 @@
 		 							<tr class="ui-state-default">
 		 								<th style="width: 100px;">เลขประจำตัว</th>
 		 								<th>ชื่อ - สกุล</th>
-		 								<th style="width: 100px;">เวลา</th>
 		 								<th style="width: 100px;">สถานะ</th>
 		 							</tr>
 	 							</thead>
