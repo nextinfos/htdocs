@@ -9,6 +9,14 @@
 		width: 20px;
 		text-align: center !important;
 	}
+	#setting {
+		display: none;
+	}
+	<?php if(!$_SESSION['atdID']){?>
+	#restoreAtd {
+		display: none;
+	}
+	<?php }?>
 </style>
 <script>
 	$('#pageName').text('ระบบลงเวลาเรียน');
@@ -26,7 +34,6 @@
 			.selectmenu()
 			.selectmenu( "menuWidget" )
 			.addClass( "overflow" );
-		$( "#setting" ).hide();
 		$('#startAtd').click(function(){
 			var date = new Date;
 			$.ajax({
@@ -35,7 +42,9 @@
 				  data: {
 					  'action':'set',
 					  'type':'createAtd',
-					  'regSubjectID':$('#subject').val(),
+					  'term':$( "input[type='radio']:checked","#term" ).val(),
+					  'year':$('#year').val(),
+					  'subjectID':$('#subject').val(),
 					  'time':date.getHours()+':'+date.getMinutes()+':'+date.getSeconds(),
 					  'late':$('#lateTime').val()
 				},
@@ -43,10 +52,11 @@
 				dataType: 'json',
 				success: function(data){
 					console.log('Recieved status');
-					if(data.status=="success"){
+					if(data.status=="SUCCESS"){
 						popupWin = window.open('atd.php', "popupWindow", "width=1024,height=768,scrollbars=no");
 						$(popupWin).load(function(){
-							window.location = window.location;
+// 							window.location = window.location;
+							$('#restoreAtd').show('blind', 500);
 						});
 						setTimeout(function(){window.location = window.location;},5000);
 					} else {
@@ -58,6 +68,10 @@
 		});
 		$('#restoreAtd').click(function(){
 			window.open('atd.php', "popupWindow", "width=1024,height=768,scrollbars=no");
+		});
+		$('#subject').load("dataCenter.php", {action:"get",type:"regInsSubList"},function(data){
+			$('#subject').selectmenu('refresh');
+			$('#setting').show('blind', 500);
 		});
 		setInterval(function(){
 			var date = new Date();
@@ -77,31 +91,44 @@
 		$(popupWin).load(function(){
 			window.location = window.location;
 		});
+		$( "#term" ).buttonset();
+		$( "#year" ).selectmenu();
 	});
-	
 </script>
 <div id="atdContainer">
 <?php
-	$instructorID = $_SESSION['userID'];
-	$strSQL = 'SELECT * FROM subject s, registersubject r WHERE s.subjectID = r.subjectID AND r.instructorID = "'.$instructorID.'"';
-	$objQuery = mysql_query($strSQL);
-	if($objQuery&&mysql_num_rows($objQuery)>=1){
-		$data = '<select id="subject">';
-		while($row = mysql_fetch_array($objQuery)){
-			$data.= '<option value="'.$row['subjectID'].'-'.$row['term'].'-'.$row['year'].'">['.$row['subjectID'].'] '.$row['name'].'</option>';
-		}
-		echo $data.'</select><script>$(function(){$("#setting").show();});</script>';
-	} else {
-		echo '<select disabled id="subject"><option>ไม่พบข้อมูล</option></select>';
-	}
+	$year = getYear();
+	$term = getTerm();
 ?>
-	<div id="setting">
-		<label for="lateTime">เวลาก่อนสาย</label><input type="text" id="lateTime" name="lateTime" value="15"><label for="lateTime">นาที</label>
-		<div id="lateShow">เวลาสายโดยประมาณ <span id="lateTimeCal"></span> น.</div>
-		<div><input type="submit" id="startAtd" value="เริ่มการลงเวลาใหม่"></div>
-		<?php if($_SESSION['atdID']) echo '<div><input type="submit" id="restoreAtd" value="เปิดการลงเวลาครั้งล่าสุด"></div>';?>
-	</div><br>
-	<div>
-	แก้ปัญหาหน้าต่างไม่ขึ้น <a href="?action=soloveProblem&tag=popupBlock" target="_blank">คลิกที่นี่</a>
+	<div id="formHolder">
+		<div class="leftCell">ภาคการศึกษา : </div>
+		<div id="term"><input type="radio" name="term" id="t1" value="1"<?php echo radioTerm(1);?> disabled/><label for="t1">1</label><input type="radio" name="term" id="t2" value="2"<?php echo radioTerm(2);?> disabled/><label for="t2">2</label><input type="radio" name="term" id="t3" value="3"<?php echo radioTerm(3);?> disabled/><label for="t3">3</label></div>
+		<div class="spacer"></div>
+		<div class="leftCell">ปีการศึกษา : </div>
+		<div>
+			<select name="year" id="year" disabled>
+				<?php echo "<option value='$year' selected>".($year+543).'</option>';?>
+			</select>
+		</div>
+		<div class="spacer"></div>
+		<div class="leftCell">วิชา :</div> 
+		<div>
+			<select name="subject" id="subject">
+				<option value="0">กำลังประมวลผล</option>
+			</select>
+		</div>
+		<div class="spacer"></div>
+		<div id="setting">
+			<label for="lateTime">เวลาก่อนสาย</label><input type="text" id="lateTime" name="lateTime" value="15"><label for="lateTime">นาที</label>
+			<div class="spacer"></div>
+			<div id="lateShow">เวลาสายโดยประมาณ <span id="lateTimeCal"></span> น.</div>
+			<div class="spacer"></div>
+			<div><input type="submit" id="startAtd" value="เริ่มการลงเวลาใหม่"></div>
+			<div class="spacer"></div>
+			<div><input type="submit" id="restoreAtd" value="เปิดการลงเวลาครั้งล่าสุด"></div>
+		</div>
+		<div>
+		แก้ปัญหาหน้าต่างไม่ขึ้น <a href="?action=soloveProblem&tag=popupBlock" target="_blank">คลิกที่นี่</a>
+		</div>
 	</div>
 </div>

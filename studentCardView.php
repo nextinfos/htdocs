@@ -82,14 +82,14 @@
 		</script>
 		<table>
 		<?php
-			$strSQL = "SELECT * FROM students";
+			$strSQL = "SELECT * FROM student";
 			$objQuery = mysql_query($strSQL);
 			if($objQuery){
 			$c=1;
 			while($row = mysql_fetch_array($objQuery)){
 				$studentID=$row['studentID'];
-				$studentFName=$row['firstname'];
-				$studentLName=$row['lastname'];
+				$studentFName=$row['firstName'];
+				$studentLName=$row['lastName'];
 				$studentPhoto = 'images/students/'.$studentID.'.jpg';
 				if(!file_exists($studentPhoto)) $studentPhoto = $noPhoto;
 				if($c%2==1) echo '<tr>';?>

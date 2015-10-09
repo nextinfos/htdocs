@@ -7,7 +7,7 @@ $studentID = $_POST['studentID'];
 $time = $_POST['time'];
 if(!$time) $time = date('H:i:s',strtotime('Now +10 minute'));
 function getCardInfo($studentID){
-	$strSQL = "SELECT * FROM students WHERE studentID = '".$studentID."' LIMIT 1";
+	$strSQL = "SELECT * FROM student WHERE studentID = '".$studentID."' LIMIT 1";
 	$objQuery = mysql_query($strSQL);
 	if($objQuery){
 		$row = mysql_fetch_array($objQuery);
@@ -15,11 +15,20 @@ function getCardInfo($studentID){
 		if(!file_exists($photo)){
 			$photo = 'images/noPhoto.jpg';
 		}
-		$result = '	{	"status": "success",	"data": [	{	"id": "'.$row['studentID'].'",	"fname": "'.$row['firstname'].'",	"lname": "'.$row['lastname'].'",	"photo": "'.$photo.'"	}	]	}';
+		$data['status'] = "SUCCESS";
+		$data['data'][] = array(
+				"id"=>$row['studentID'],
+				"fname"=>$row['firstName'],
+				"lname"=>$row['lastName'],
+				"photo"=>$photo);
 	} else {
-		$result = '	{	"status": "fail",	"data": [	{	"detail": "Error Query ['.$strSQL.'] '.mysql_error().'",	}	]	}';
+		$data['status'] = "FAIL";
+		$data['data'][] = array(
+				"detail"=> "Error Query [$strSQL] ".mysql_error()
+		);
+		$result = '	{	"status": "fail",	"data": [	{	,	}	]	}';
 	}
-	return $result;
+	return $data;
 }
 function getStdFromCard($cardID){
 	if(ctype_digit ($cardID)){
@@ -29,7 +38,7 @@ function getStdFromCard($cardID){
 		$cardID = str_replace($thn, $num, $cardID);
 		$cardID = str_replace($thc, $num, $cardID);
 	}
-	$strSQL = "SELECT studentID FROM card WHERE cardID = '".$cardID."' OR secondCardID = '".$cardID."' LIMIT 1";
+	$strSQL = "SELECT studentID FROM student WHERE cardID = '".$cardID."' OR secondCardID = '".$cardID."' LIMIT 1";
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)==1){
 		$row = mysql_fetch_array($objQuery);
@@ -40,17 +49,17 @@ function getStdFromCard($cardID){
 	return $studentID;
 }
 function isStdRegis($studentID,$atdID){
-	$strSQL = "SELECT a.datetime,a.late FROM reg_student r INNER JOIN atdlist a WHERE r.studentID = '".$studentID."'  AND a.atdID = '".$atdID."' AND r.regSubjectID = a.regSubjectID LIMIT 1";
+	$strSQL = "SELECT regstu.studentID FROM `register-student` regstu, `attendanceinfo` atd WHERE atd.subjectID = regstu.subjectID AND atd.registerID = regstu.registerID AND regstu.studentID = '".$studentID."'  AND atd.attendanceID = '".$atdID."' LIMIT 1";
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)==1){
-		$row = mysql_fetch_array($objQuery);
+		$row = true;
 	} else {
 		$row = false;
 	}
 	return $row;
 }
 function isCheckedIn($studentID,$atdID){
-	$strSQL = "SELECT time FROM atdinfo WHERE studentID = '".$studentID."' AND atdID = '".$atdID."' LIMIT 1";
+	$strSQL = "SELECT stuatd.status FROM `studentattendance` stuatd WHERE stuatd.studentID = '".$studentID."' AND stuatd.attendanceID = '".$atdID."' LIMIT 1";
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)<1){
 		$result = false;
@@ -62,20 +71,37 @@ function isCheckedIn($studentID,$atdID){
 if($action=="get"){
 	if($type=="atdList"){
 		if($atdID){
-			$strSQL = "SELECT a.studentID,a.time,a.status,s.firstname,s.lastname FROM atdinfo a INNER JOIN students s WHERE a.studentID = s.studentID AND a.atdID = '".$atdID."' ORDER BY a.time DESC";
+			$strSQL = "
+					SELECT 
+						stuatd.studentID,
+						stuatd.status,
+						stu.firstName,
+						stu.lastName 
+					FROM 
+						`studentattendance` stuatd,
+						`student` stu
+					WHERE
+						stuatd.attendanceID = '$atdID' AND
+						stuatd.studentID = stu.studentID";
 			$objQuery = mysql_query($strSQL);
 			if($objQuery){
-				$data = '{	"data": [';
-				$i==0;
-				$status = array('Cancel','Ontime','Late','Unknow');
-				while($row=mysql_fetch_array($objQuery)){
-					$i++;
-					if($i>1) $data .= ',';
-					$data .= '{	"id": "'.$row['studentID'].'",	"name": "'.$row['firstname'].'&nbsp;&nbsp;&nbsp;'.$row['lastname'].'",	"time": "'.$row['time'].'",	"status": "'.$status[$row['status']].'"}';
+				if(mysql_num_rows($objQuery)>0){
+					$status = array('ONTIME'=>'Ontime','LATE'=>'Late','Unknow');
+					while($row=mysql_fetch_array($objQuery)){
+						$data['data'][] = array(
+								"id"=> $row['studentID'],	
+								"name"=> $row['firstName'].'&nbsp;&nbsp;&nbsp;'.$row['lastName'],	
+								"status"=> $status[$row['status']]);
+					}
+				} else {
+					$data['data'][] = array(
+							"id"=> '',
+							"name"=> 'ไม่พบข้อมูล',
+							"status"=> '');
 				}
-				echo $data.']	}';
 			}
 		}
+		echo json_encode($data);
 	}elseif($type=="stdList"){
 		$subID = $_REQUEST['regSubjectID'];
 		if($subID){
@@ -189,44 +215,111 @@ if($action=="get"){
 	}
 } elseif($action=="set"){
 	if($type=="atdList"){
-		if($cardID||$studentID){
-			if($cardID){
-				$studentID = getStdFromCard($cardID);
-			}
-			if($studentID){
-				$stdIsReg = isStdRegis($studentID,$atdID);
-				if($stdIsReg){
-					$startDateTime = $stdIsReg['datetime'];
-					$late = $stdIsReg['late'];
-					if(!isCheckedIn($studentID, $atdID)){
-						if(date('Y-m-d H:i:s',strtotime($startDateTime.' +'.$late.' minute'))>date('Y-m-d H:i:s',strtotime('Today '.$time))) $status = 1; else $status = 2;
-						$strSQL = "INSERT INTO atdinfo VALUES(NULL,'".$atdID."','".$studentID."','".date("Y-m-d")."','".$time."','".$status."')";
-						$objQuery = mysql_query($strSQL);
-						if($objQuery){
-							echo '{	"status":"success",	"data": [{"responseText":"Added","studentID":'.getCardInfo($studentID).'}]	}';
-						} else {
-							echo '{"status":"fail","data": [{"reason":"SaveFail","strSQL":"'.$strSQL.'"}]}';
-						}
-					} else {
-						echo '{"status":"fail","data": [{"reason":"CheckedIn","strSQL":"'.$strSQL.'"}]}';
-					}
-				} else {
-					echo '{"status":"fail","data": [{"reason":"NotFoundReg","strSQL":"'.$strSQL.'"}]}';
-				}
-			} else {
-					echo '{"status":"fail","data": [{"reason":"NotFoundCard","cardID":"'.$_POST['cardID'].'"}]}';
-			}
-		}
-	} elseif($type=='createAtd'){
-		$regSubjectID = $_POST['regSubjectID'];
-		$late = $_POST['late'];
-		$time = $_POST['time'];
-		$strSQL = 'INSERT INTO atdlist VALUES (NULL,"'.$regSubjectID.'","'.date('Y-m-d H:i:s',strtotime('Today '.$time)).'","'.$late.'")';
+		$strSQL = "SELECT subjectID, registerID,date FROM `attendanceinfo` WHERE attendanceID = '$atdID';";
 		$objQuery = mysql_query($strSQL);
 		if($objQuery){
-			$_SESSION['atdID'] = mysql_insert_id();
-			echo '{"status":"success"}';
+			$row = mysql_fetch_array($objQuery);
+			$subjectID = $row['subjectID'];
+			$registerID = $row['registerID'];
+			$startDateTime = $row['date'];
+			if($cardID||$studentID){
+				if($cardID){
+					$studentID = getStdFromCard($cardID);
+				}
+				if($studentID){
+					$stdIsReg = isStdRegis($studentID,$atdID);
+					if($stdIsReg){
+						$late = $_SESSION['atdLate'];
+						if(!isCheckedIn($studentID, $atdID)){
+							if(date('Y-m-d H:i:s',strtotime($startDateTime.' +'.$late.' minute 2 second'))>date('Y-m-d H:i:s',strtotime('Today '.$time))) $status = 'ONTIME'; else $status = 'LATE';
+							$strSQL = "INSERT INTO `studentattendance` VALUES('$atdID','$studentID','$subjectID','$registerID','$status')";
+							$objQuery = mysql_query($strSQL);
+							if($objQuery){
+								$data['status'] = "SUCCESS";
+								$data['data'][] = array(
+										"responseText"=>"Added",
+										"studentID"=>getCardInfo($studentID)
+								);
+							} else {
+								$data['status'] = "FAIL";
+								$data['data'][] = array(
+										"reason"=>"SaveFail",
+										"strSQL"=>$strSQL
+								);
+							}
+						} else {
+							$data['status'] = "FAIL";
+							$data['data'][] = array(
+									"reason"=>"CheckedIn",
+									"strSQL"=>$strSQL
+							);
+						}
+					} else {
+						$data['status'] = "FAIL";
+						$data['data'][] = array(
+								"reason"=>"NotFoundReg",
+								"strSQL"=>$strSQL
+						);
+					}
+				} else {
+					$data['status'] = "FAIL";
+					$data['data'][] = array(
+							"reason"=>"NotFoundCard",
+							"cardID"=>$_POST['cardID']
+					);
+				}
+			}
+		} else {
+			$data['status'] = "FAIL";
+			$data['data'][] = array(
+				"reason"=>"NotFoundAtd",
+				"atdID"=>$atdID
+			);
 		}
+		echo json_encode($data);
+	} elseif($type=='createAtd'){
+		$term = $_POST['term'];
+		$year = $_POST['year'];
+		$subjectID = $_POST['subjectID'];
+		$strSQL = "SELECT attendanceID,date FROM attendanceinfo WHERE subjectID = '$subjectID' AND registerID = (SELECT registerID FROM registerinfo WHERE term='$term' AND year='$year') AND date LIKE '".date("Y-m-d")."%'";
+		$objQuery = mysql_query($strSQL);
+		if(mysql_num_rows($objQuery)==0){
+			$strSQL = "SELECT regsub.registerID FROM `register-subject` regsub, `registerinfo` reg WHERE reg.term = '$term' AND reg.year = '$year' AND reg.registerID = regsub.registerID AND regsub.subjectID = '$subjectID'";
+			$objQuery = mysql_query($strSQL);
+			if(mysql_num_rows($objQuery)==1){
+				$row = mysql_fetch_array($objQuery);
+				$registerID = $row['registerID'];
+				$late = $_POST['late'];
+				$time = $_POST['time'];
+				$strSQL = 'INSERT INTO attendanceinfo VALUES (NULL,"'.$subjectID.'","'.$registerID.'","'.date('Y-m-d H:i:s',strtotime('Today '.$time)).'")';
+				$objQuery = mysql_query($strSQL);
+				if($objQuery){
+					$atdID = mysql_insert_id();
+					$_SESSION['atdID'] = $atdID;
+					$_SESSION['atdLate'] = $late;
+					$_SESSION['atdStart'] = $time;
+					$data['status'] = "SUCCESS";
+					$data['atdID'] = $atdID;
+				} else {
+					$data['status']  = "FAIL";
+					$data['strSQL'] = $strSQL;
+				}
+			} else {
+				$data['status'] = "NOTFOUND";
+				$data['strSQL'] = $strSQL;
+			}
+		} else {
+			$row = mysql_fetch_array($objQuery);
+			$late = $_POST['late'];
+			$atdID = $row['attendanceID'];
+			$time = $row['date'];
+			$_SESSION['atdID'] = $atdID;
+			$_SESSION['atdLate'] = $late;
+			$_SESSION['atdStart'] = date("H:i:s",strtotime($time));
+			$data['status'] = "SUCCESS";
+			$data['atdID'] = $atdID;
+		}
+		echo json_encode($data);
 	} elseif($type=='cardHolder'){
 		$studentID = $_POST['studentID'];
 		$cardID1 = $_POST['cardID1'];
@@ -258,6 +351,7 @@ if($action=="get"){
 			$objQuery = mysql_query($strSQL);
 			if($objQuery){
 				$data['status'] = 'OK';
+				$data['studentID'] = $studentID;
 				$data['password'] = $password;
 			} else {
 				$data['status'] = 'ERROR';
@@ -265,6 +359,7 @@ if($action=="get"){
 			}
 		} else {
 			$data['status'] = 'EXIST';
+			$data['studentID'] = $studentID;
 		}
 		echo json_encode($data);
 	} elseif($type=='regStudent'){

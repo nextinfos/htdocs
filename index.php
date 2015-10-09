@@ -20,6 +20,7 @@
 		<link href="scripts/jquery-ui/dataTables/jquery.dataTables.css" rel="stylesheet">
 		<link rel="stylesheet" type="text/css" href="scripts/normalize.css" />
 		<link rel="stylesheet" type="text/css" href="scripts/component.css" />
+		<link href="scripts/NinjaRadial.css" rel="stylesheet" type="text/css" />
 		<script src="scripts/jquery-ui/external/jquery/jquery.js"></script>
  		<script src="scripts/jquery-ui/jquery-ui.js"></script>
  		<script src="scripts/clock.js"></script>
@@ -27,18 +28,20 @@
  		<script src="scripts/jquery-ui/dataTables/jquery.dataTables.js"></script>
  		<script type="text/javascript" src="scripts/jquery.canvasjs.min.js"></script>
  		<script src="scripts/comboBox.js"></script>
+		<script src="scripts/NinjaRadial.js" type="text/javascript"></script>
  		<style>
  			html, body {
 			    height:100%;
 			}
  			body {
+ 				overflow: hidden;
  				color: #333;
 /* 				width: 1024px; */
 /* 				height: 768px; */
 				margin: 0px;
 				font-size: 1em;
 /*BG Version 1*/
-				background: url('images/background.jpg');
+				background: url('images/bg_fresh.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
@@ -46,6 +49,19 @@
 				background: url("images/bg.png");
     			background-attachment: fixed;
     			background-size: contain;*/
+			}
+			.simBG {
+				background: url('images/bg_fresh.jpg');
+				background-size: cover !important;
+				background-position: center bottom;
+				background-attachment: fixed;
+				position: absolute;
+				top: 0px;
+				left: 0px;
+				min-width: 100%;
+				min-height: 100%;
+				z-index: -1;
+				-webkit-filter: blur(5px);
 			}
 			.mainContainer {
 /*  			background: rgba(255,255,255,0.5); */
@@ -56,6 +72,7 @@
 			}
 			.container {
 				background: rgba(0,0,0,0.3) !important;
+				box-shadow: 30px 30px 40px rgba(0,0,0,0.3);
 			}
 			.holder {
 				position: relative;
@@ -70,6 +87,7 @@
 				height: 100px;
 				background: rgba(0,0,0,0.3);
 				top: 70px;
+				box-shadow: 0px 0px 20px rgba(0,0,0,0.3);
 			}
 			#pageNameD {
 				text-align: right;
@@ -127,6 +145,8 @@
 			}
 			.ui-widget {
 				font-size: 1em;
+				/*-----Drop Shadow-----*/
+				box-shadow: 10px 10px 20px rgba(0,0,0,0.3);
 			}
 			.blur {
 				-webkit-filter: blur(5px);
@@ -185,6 +205,44 @@
 				margin-left: -70px;
 				top: 50%;
 				left: 50%;
+			}
+			.fa {
+			    display: inline-block;
+			    font: normal normal normal 14px/1 'typicons';
+			    font-size: inherit;
+			    text-rendering: auto;
+			    -webkit-font-smoothing: antialiased;
+			    -moz-osx-font-smoothing: grayscale;
+			    transform: translate(0, 0);
+			}
+			#formHolder {
+				margin: auto;
+				display: table;
+			}
+			#formHolder>div {
+				margin: auto;
+/* 		 		display: block;  */
+/* 		 		text-align: left;  */
+				padding: 2px;
+			}
+			#subjectType>label {
+				width: 114px;
+				height: 33px;
+			}
+			#subjectType>label>span,#term>label>span {
+				padding-top: 5px;
+			}
+			#term>label {
+				width: 50px;
+			}
+			#year {
+				width: 150px;
+			}
+			.spacer {
+				height: 5px;
+			}
+			.leftCell {
+				padding-left: 5px !important;
 			}
  		</style>
  		<style type="text/css">
@@ -296,11 +354,21 @@
  	 			$( '#logoImage, #logoText' ).click(function(){
  	 	 			$( '#logo' ).click();
  	 			});
+ 	 			buttonsSubject = new Array();
+ 	 			buttonsSubject.push({ text: "เพิ่มวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=add'; } , cssIcon: "fa icon-plus", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsSubject.push({ text: "แก้ไขวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=edit'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsSubject.push({ text: "เปิดวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=subjectRegistrar'; }, cssIcon: "fa icon-folder-add", cssLabel: "", cssItem: "itemRadial" });
+ 	 			$("#menuSubject").ninjaRadial({
+ 	 			     buttons: buttonsSubject,
+ 	                backColor: "rgba(20,20,20,0.7)",
+ 	                borderColor: "rgba(200,200,200,0.1)"
+ 	 			});
  			});
  		</script>
  		<script src="scripts/modernizr.custom.25376.js"></script>
  	</head>
  	<body>
+ 	<div class="simBG"></div>
  		<div id="loading">
  			<div class="spinnerHolder">
 	 			<div class="container grey">
@@ -348,9 +416,7 @@
 				<a href="?action=index&ref=menu" class="icon-home">หน้าหลัก</a>
 				<?php if($confUserType=="instructor"){?>
 				<?php		if($confSuperUser=="1"){?>
-				<a href="?action=subjectManager&tag=add" class="icon-plus">เพิ่มรายวิชา</a>
-				<a href="?action=subjectManager&tag=edit" class="icon-pencil">แก้ไขรายวิชา</a>
-				<a href="?action=subjectManager&tag=subjectRegistrar" class="icon-book">เปิดรายวิชา</a>
+				<a href="#" class="icon-book" id="menuSubject">จัดการรายวิชา</a>
 				<a href="?action=subjectManager&tag=studentRegistrar" class="icon-persons">ลงทะเบียนนร.</a>
 				<a href="?action=studentManager&tag=add" class="icon-personadd">เพิ่มข้อมูลนร.</a>
 				<a href="#" class="icon-personadd">เพิ่มข้อมูลครู</a>

@@ -177,7 +177,7 @@ html, body, .perspective {
 .icon-link-outline::before { content: "\e09b" }
 .icon-pencil::before { content: "\e0c3" }
 .icon-plus::before { content: "\e0ce" }
-
+.icon-folder-add::before { content: "\e07b" }
 /* Individual Effects */
 
 /* Effect airbnb */
