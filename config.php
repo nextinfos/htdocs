@@ -20,11 +20,25 @@
 			$confSuperUser = $_SESSION['userSuper'];
 		}
 	} else {
-		$username = urlencode($_POST['username']);
-		$password = urlencode($_POST['password']);
-		$type = urlencode($_POST['type']);
+		$username = $_POST['username'];
+		$password = $_POST['password'];
+		$type = $_POST['type'];
 		if($username&&$password&&$type){
-			$strSQLc = 'SELECT * FROM `'.$type.'` WHERE `'.$type.'ID` = "'.$username.'" AND `password` = "'.$password.'"';
+			$strSQLc = sprintf(
+				"
+				SELECT
+					* 
+				FROM
+					`%s` 
+				WHERE
+					`%sID` = '%s' AND
+					`password` = '%s'
+				",
+				mysql_real_escape_string($type),
+				mysql_real_escape_string($type),
+				mysql_real_escape_string($username),
+				mysql_real_escape_string($password)
+			);
 			$objQueryc = mysql_query($strSQLc);
 			if(mysql_num_rows($objQueryc)==1){
 				$rowc = mysql_fetch_array($objQueryc);
@@ -67,9 +81,10 @@
 		$date = date('Y-m-d');
 // 		$date=date('Y-m-d', strtotime("10/10/".getYear()));	//--(m/d/Y)
 		$term1Begin = date('Y-m-d', strtotime("05/18/".getYear()));
-		$term1End = date('Y-m-d', strtotime("10/10/".getYear()));
+// 		$term1End = date('Y-m-d', strtotime("10/10/".getYear()));
+		$term1End = date('Y-m-d', strtotime("10/31/".getYear()));
 // 		$term2Begin = date('m-d', strtotime("11/02"));
-		$term2Begin = date('Y-m-d', strtotime("10/11/".getYear()));
+		$term2Begin = date('Y-m-d', strtotime("11/01/".getYear()));
 		$term2End = date('Y-m-d', strtotime("03/25".getYear()." +1 year"));
 		if (($date >= $term1Begin) && ($date <= $term1End)) {
 			$term = 1;

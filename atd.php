@@ -46,13 +46,15 @@
 /* 				height: 768px; */
 				margin: 0px;
 				font-size: 12pt;
-				background: url('images/background.jpg');
+				background: url('images/bg_blue.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
 			}
-			.mainContainer {
-				background: rgba(255,255,255,0.5);
+/* 			.mainContainer { */
+			.simBG {
+				color: #EEE;
+				background: rgba(0,0,0,0.3);
 			}
 			fieldset {
 				border: 2px solid #CCCCCC;
@@ -109,6 +111,9 @@
 			#cardID {
 				font-size: 8pt !important;
 			}
+			.blur {
+				-webkit-filter: blur(5px);
+			}
 		</style>
 		<script>
 		String.prototype.replaceArray = function(find, replace) {
@@ -132,7 +137,7 @@
 				$('input:button, input:submit').button();
 				$('input:text, input:password').button().css({
 					'font' : 'inherit',
-					'color' : 'inherit',
+// 					'color' : 'inherit',
 					'text-align' : 'left',
 					'outline' : 'none',
 					'cursor' : 'text'
@@ -252,6 +257,13 @@
 								telReason = 'ไม่พบข้อมูลบัตร กรุณาติดต่อผู้ดูแล.';
 								playSound('images/sounds/cardNotFound.mp3');
 							}
+							if(reason == "NotLogIn"){
+								telReason = 'กรุณาเข้าสู่ระบบอีกครั้ง.';
+								$( '.mainContainer' ).addClass('blur');
+								setTimeout(function(){
+									window.location = window.location;
+								},3000);
+							}
 							notice(telReason);
 							console.warn(telReason);
 						}
@@ -305,7 +317,8 @@
 				console.log('Autohide Active.');
 			}
 		</script>
-	<div class="mainContainer" style="width:1024px;height:768px;border-left:1px solid black;border-right:1px solid black;overflow:hidden;margin: 0 auto;">
+<div class="simBG">
+	<div class="mainContainer" style="width:1024px;height:768px;overflow:hidden;margin: 0 auto;">
 		<div style="position:relative;width: 440px;height: 150px;left:40px;top:40px;">
  				<fieldset>
   					<legend>รายละเอียดวิชา</legend>
@@ -352,6 +365,7 @@
 		<div class="ui-state-highlight ui-corner-all notice"><p><span class="ui-icon ui-icon-info" style="float: left; margin-right: .3em;"></span><span id="notice-msg"></span></p></div>
 		<div class="ui-state-error ui-corner-all alert"><p><span class="ui-icon ui-icon-alert" style="float: left; margin-right: .3em;"></span><span id="alert-msg">ระบบแตะบัตร(RFID)ไม่ทำงาน </span></p></div>
 	</div>
+</div>
 	<script>
 		//	สคริปคัดลอก
 			ZeroClipboard.setMoviePath('scripts/ZeroClipboard.swf');

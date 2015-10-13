@@ -7,7 +7,18 @@ $studentID = $_POST['studentID'];
 $time = $_POST['time'];
 if(!$time) $time = date('H:i:s',strtotime('Now +10 minute'));
 function getCardInfo($studentID){
-	$strSQL = "SELECT * FROM student WHERE studentID = '".$studentID."' LIMIT 1";
+	$strSQL = sprintf(
+		"
+		SELECT
+			*
+		FROM
+			student
+		WHERE
+			studentID = '%s'
+		LIMIT 1
+		",
+		mysql_real_escape_string($studentID)
+	);
 	$objQuery = mysql_query($strSQL);
 	if($objQuery){
 		$row = mysql_fetch_array($objQuery);
@@ -38,7 +49,20 @@ function getStdFromCard($cardID){
 		$cardID = str_replace($thn, $num, $cardID);
 		$cardID = str_replace($thc, $num, $cardID);
 	}
-	$strSQL = "SELECT studentID FROM student WHERE cardID = '".$cardID."' OR secondCardID = '".$cardID."' LIMIT 1";
+	$strSQL = sprintf(
+		"
+		SELECT
+			studentID
+		FROM
+			student
+		WHERE
+			cardID = '%s' OR
+			secondCardID = '%s'
+		LIMIT 1
+		",
+		mysql_real_escape_string($cardID),
+		mysql_real_escape_string($cardID)
+	);
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)==1){
 		$row = mysql_fetch_array($objQuery);
@@ -49,7 +73,23 @@ function getStdFromCard($cardID){
 	return $studentID;
 }
 function isStdRegis($studentID,$atdID){
-	$strSQL = "SELECT regstu.studentID FROM `register-student` regstu, `attendanceinfo` atd WHERE atd.subjectID = regstu.subjectID AND atd.registerID = regstu.registerID AND regstu.studentID = '".$studentID."'  AND atd.attendanceID = '".$atdID."' LIMIT 1";
+	$strSQL = sprintf(
+		"
+		SELECT
+			regstu.studentID
+		FROM
+			`register-student` regstu,
+			`attendanceinfo` atd
+		WHERE
+			atd.subjectID = regstu.subjectID AND
+			atd.registerID = regstu.registerID AND
+			regstu.studentID = '%s'  AND
+			atd.attendanceID = '%s'
+		LIMIT 1
+		",
+		mysql_real_escape_string($studentID),
+		mysql_real_escape_string($atdID)
+	);
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)==1){
 		$row = true;
@@ -59,7 +99,20 @@ function isStdRegis($studentID,$atdID){
 	return $row;
 }
 function isCheckedIn($studentID,$atdID){
-	$strSQL = "SELECT stuatd.status FROM `studentattendance` stuatd WHERE stuatd.studentID = '".$studentID."' AND stuatd.attendanceID = '".$atdID."' LIMIT 1";
+	$strSQL = sprintf(
+		"
+		SELECT
+			stuatd.status
+		FROM
+			`studentattendance` stuatd
+		WHERE
+			stuatd.studentID = '%s' AND
+			stuatd.attendanceID = '%s'
+		LIMIT 1
+		",
+		mysql_real_escape_string($studentID),
+		mysql_real_escape_string($atdID)
+	);
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)<1){
 		$result = false;
@@ -71,18 +124,22 @@ function isCheckedIn($studentID,$atdID){
 if($action=="get"){
 	if($type=="atdList"){
 		if($atdID){
-			$strSQL = "
-					SELECT 
-						stuatd.studentID,
-						stuatd.status,
-						stu.firstName,
-						stu.lastName 
-					FROM 
-						`studentattendance` stuatd,
-						`student` stu
-					WHERE
-						stuatd.attendanceID = '$atdID' AND
-						stuatd.studentID = stu.studentID";
+			$strSQL = sprintf(
+				"
+				SELECT 
+					stuatd.studentID,
+					stuatd.status,
+					stu.firstName,
+					stu.lastName 
+				FROM 
+					`studentattendance` stuatd,
+					`student` stu
+				WHERE
+					stuatd.attendanceID = '%s' AND
+					stuatd.studentID = stu.studentID
+				",
+				mysql_real_escape_string($atdID)
+			);
 			$objQuery = mysql_query($strSQL);
 			if($objQuery){
 				if(mysql_num_rows($objQuery)>0){
@@ -100,6 +157,70 @@ if($action=="get"){
 							"status"=> '');
 				}
 			}
+		}
+		echo json_encode($data);
+	} elseif($type=="stuRegList"){
+		$subjectID = $_REQUEST['subjectID'];
+		$instructorID = $confUserID;
+		$term = getTerm();
+		$year = getYear();
+		$strSQL = sprintf(
+			"
+			SELECT
+				stu.cardID,
+				stu.secondCardID,
+				stu.studentID,
+				stu.firstName,
+				stu.lastName
+			FROM
+				`student` stu
+			WHERE
+				stu.studentID
+				IN
+				(
+					SELECT
+						studentID
+					FROM
+						`register-student`
+					WHERE
+						subjectID = '%s' AND
+						registerID =
+						(
+							SELECT
+								registerID
+							FROM
+								registerinfo
+							WHERE
+								term = '%s' AND
+								year = '%s'
+						)
+				)
+			",
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery&&mysql_num_rows($objQuery)>0){
+			while($row=mysql_fetch_array($objQuery)){
+				$data['data'][] = array(
+						'cardID'=>'<span style="display:none;">'.$row['cardID'].'</span>',
+						'secondCardID'=>'<span style="display:none;">'.$row['secondCardID'].'</span>',
+						'studentID'=>$row['studentID'],
+						'firstName'=>$row['firstName'],
+						'lastName'=>$row['lastName'],
+						'score'=>'<input type="text" name="score" />'
+				);
+			}
+		} else {
+			$data['data'][] = array(
+					'cardID'=>'',
+					'secondCardID'=>'',
+					'studentID'=>'',
+					'firstName'=>'ไม่พบข้อมูล',
+					'lastName'=>'',
+					'score'=>''
+			);
 		}
 		echo json_encode($data);
 	}elseif($type=="stdList"){
@@ -146,15 +267,55 @@ if($action=="get"){
 			}
 			echo $data.']	}';
 		}
+	} elseif($type=="getScoreList"){
+		$term = getTerm();
+		$year = getYear();
+		$instructorID = $confUserID;
+		$subjectID = $_POST['subjectID'];
+		$strSQL = sprintf(
+			"
+			SELECT
+				*
+			FROM
+				`scoreinfo`
+			WHERE
+				subjectID = '%s' AND
+				registerID =
+					(
+					SELECT
+						registerID
+					FROM
+						`registerinfo`
+					WHERE
+						term = '%s' AND
+						year = '%s'
+					)
+				ORDER BY
+					date
+				ASC
+			",
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+		);
+		$objQuery = mysql_query($strSQL);
+		if(mysql_num_rows($objQuery)>=1){
+			while($row = mysql_fetch_array($objQuery)){
+				$data.='<option value="'.$row['scoreID'].'">'.($row['type']=='TASK'?'ชิ้นงาน':($row['type']=='QUIZ'?'ตอบคำถาม':'สอบ')).' '.$row['maxScore'].' คะแนน ('.(date("d/m/Y H:i")).')</option>';
+			}
+		} else {
+			$data = '<option value="0">ไม่พบข้อมูลลงคะแนน</option>';
+		}
+		echo $data;
 	} elseif($type=="regInsSubList"){
 		$term = getTerm();
 		$year = getYear();
 		$instructorID = $confUserID;
-		$strSQL = 'SELECT * FROM `register-subject` regsub, `registerinfo` reg WHERE reg.registerID = regsub.registerID AND reg.term="'.$term.'" AND reg.year="'.$year.'" AND regsub.instructorID="'.$instructorID.'";';
+		$strSQL = 'SELECT sub.subjectID AS subjectID, sub.name AS name, sub.type AS type FROM `register-subject` regsub, `registerinfo` reg, `subject` sub WHERE reg.registerID = regsub.registerID AND reg.term="'.$term.'" AND reg.year="'.$year.'" AND regsub.subjectID = sub.subjectID AND regsub.instructorID="'.$instructorID.'";';
 		$objQuery = mysql_query($strSQL);
 		if(mysql_num_rows($objQuery)>=1){
 			while($row = mysql_fetch_array($objQuery)){
-				$data.='<option value="'.$row['subjectID'].'">'.$row['subjectID'].' '.$row['name'].'('.($row['type']=='BASIC'?'พื้นฐาน':'เพิ่มเติม').')</option>';
+				$data.='<option value="'.$row['subjectID'].'">'.$row['subjectID'].' '.$row['name'].' ('.($row['type']=='BASIC'?'พื้นฐาน':'เพิ่มเติม').')</option>';
 			}
 		} else {
 			$data = '<option value="0">ไม่พบวิชา</option>';
@@ -215,66 +376,71 @@ if($action=="get"){
 	}
 } elseif($action=="set"){
 	if($type=="atdList"){
-		$strSQL = "SELECT subjectID, registerID,date FROM `attendanceinfo` WHERE attendanceID = '$atdID';";
-		$objQuery = mysql_query($strSQL);
-		if($objQuery){
-			$row = mysql_fetch_array($objQuery);
-			$subjectID = $row['subjectID'];
-			$registerID = $row['registerID'];
-			$startDateTime = $row['date'];
-			if($cardID||$studentID){
-				if($cardID){
-					$studentID = getStdFromCard($cardID);
-				}
-				if($studentID){
-					$stdIsReg = isStdRegis($studentID,$atdID);
-					if($stdIsReg){
-						$late = $_SESSION['atdLate'];
-						if(!isCheckedIn($studentID, $atdID)){
-							if(date('Y-m-d H:i:s',strtotime($startDateTime.' +'.$late.' minute 2 second'))>date('Y-m-d H:i:s',strtotime('Today '.$time))) $status = 'ONTIME'; else $status = 'LATE';
-							$strSQL = "INSERT INTO `studentattendance` VALUES('$atdID','$studentID','$subjectID','$registerID','$status')";
-							$objQuery = mysql_query($strSQL);
-							if($objQuery){
-								$data['status'] = "SUCCESS";
-								$data['data'][] = array(
-										"responseText"=>"Added",
-										"studentID"=>getCardInfo($studentID)
-								);
+		if($atdID){
+			$strSQL = "SELECT subjectID, registerID,date FROM `attendanceinfo` WHERE attendanceID = '$atdID';";
+			$objQuery = mysql_query($strSQL);
+			if($objQuery){
+				$row = mysql_fetch_array($objQuery);
+				$subjectID = $row['subjectID'];
+				$registerID = $row['registerID'];
+				$startDateTime = $row['date'];
+				if($cardID||$studentID){
+					if($cardID){
+						$studentID = getStdFromCard($cardID);
+					}
+					if($studentID){
+						$stdIsReg = isStdRegis($studentID,$atdID);
+						if($stdIsReg){
+							$late = $_SESSION['atdLate'];
+							if(!isCheckedIn($studentID, $atdID)){
+								if(date('Y-m-d H:i:s',strtotime($startDateTime.' +'.$late.' minute 2 second'))>date('Y-m-d H:i:s',strtotime('Today '.$time))) $status = 'ONTIME'; else $status = 'LATE';
+								$strSQL = "INSERT INTO `studentattendance` VALUES('$atdID','$studentID','$subjectID','$registerID','$status')";
+								$objQuery = mysql_query($strSQL);
+								if($objQuery){
+									$data['status'] = "SUCCESS";
+									$data['data'][] = array(
+											"responseText"=>"Added",
+											"studentID"=>getCardInfo($studentID)
+									);
+								} else {
+									$data['status'] = "FAIL";
+									$data['data'][] = array(
+											"reason"=>"SaveFail",
+											"strSQL"=>$strSQL
+									);
+								}
 							} else {
 								$data['status'] = "FAIL";
 								$data['data'][] = array(
-										"reason"=>"SaveFail",
+										"reason"=>"CheckedIn",
 										"strSQL"=>$strSQL
 								);
 							}
 						} else {
 							$data['status'] = "FAIL";
 							$data['data'][] = array(
-									"reason"=>"CheckedIn",
+									"reason"=>"NotFoundReg",
 									"strSQL"=>$strSQL
 							);
 						}
 					} else {
 						$data['status'] = "FAIL";
 						$data['data'][] = array(
-								"reason"=>"NotFoundReg",
-								"strSQL"=>$strSQL
+								"reason"=>"NotFoundCard",
+								"cardID"=>$_POST['cardID']
 						);
 					}
-				} else {
-					$data['status'] = "FAIL";
-					$data['data'][] = array(
-							"reason"=>"NotFoundCard",
-							"cardID"=>$_POST['cardID']
-					);
 				}
+			} else {
+				$data['status'] = "FAIL";
+				$data['data'][] = array(
+					"reason"=>"NotFoundAtd",
+					"atdID"=>$atdID
+				);
 			}
 		} else {
 			$data['status'] = "FAIL";
-			$data['data'][] = array(
-				"reason"=>"NotFoundAtd",
-				"atdID"=>$atdID
-			);
+			$data['data'][] = array("reason"=>"NotLogIn");
 		}
 		echo json_encode($data);
 	} elseif($type=='createAtd'){

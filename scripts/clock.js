@@ -99,7 +99,7 @@
                 ctx.lineTo((canvas.width / 2 - Math.cos(angle) * 20),      // DRAW THE LENGTH.
                     canvas.height / 2 - Math.sin(angle) * 20);
 
-                ctx.strokeStyle = '#586A73';        // COLOR OF THE HAND.
+                ctx.strokeStyle = '#FFF';        // COLOR OF THE HAND.
                 ctx.stroke();
             }
 
@@ -114,7 +114,7 @@
                 ctx.lineTo((canvas.width / 2 + Math.cos(angle) * secHandLength / 1.1),      // DRAW THE LENGTH.
                     canvas.height / 2 + Math.sin(angle) * secHandLength / 1.1);
 
-                ctx.strokeStyle = '#999';  // COLOR OF THE HAND.
+                ctx.strokeStyle = '#BBB';  // COLOR OF THE HAND.
                 ctx.stroke();
             }
 
@@ -130,7 +130,7 @@
                 ctx.lineTo((canvas.width / 2 + Math.cos(angle) * secHandLength / 1.5),      // DRAW THE LENGTH.
                     canvas.height / 2 + Math.sin(angle) * secHandLength / 1.5);
 
-                ctx.strokeStyle = '#000';   // COLOR OF THE HAND.
+                ctx.strokeStyle = '#888';   // COLOR OF THE HAND.
                 ctx.stroke();
             }
             var hour = date.getHours();

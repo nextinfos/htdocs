@@ -178,6 +178,9 @@ html, body, .perspective {
 .icon-pencil::before { content: "\e0c3" }
 .icon-plus::before { content: "\e0ce" }
 .icon-folder-add::before { content: "\e07b" }
+.icon-stopwatch::before { content: "\e10c" }
+.icon-attachment-outline::before { content: "\e026" }
+
 /* Individual Effects */
 
 /* Effect airbnb */
