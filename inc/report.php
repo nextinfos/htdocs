@@ -304,7 +304,7 @@
 					$reportr.='<td colspan="'.sizeof($scoreList).'">ERROR</td>'."\n";
 				}
 				mysql_free_result($objQuerya);
-				$per = round($sumScore/$sumMaxScore*100,2);
+				$per = @round($sumScore/$sumMaxScore*100,2);
 				if($per<$warnPer&&$per>=$lowPer){
 					$per = '<span class="warnPer">'.$per.'</span>';
 					$rowClass = 'warn';
