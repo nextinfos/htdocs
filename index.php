@@ -35,13 +35,13 @@
 			}
  			body {
  				overflow: hidden;
- 				color: #333;
+ 				color: #EEE;
 /* 				width: 1024px; */
 /* 				height: 768px; */
 				margin: 0px;
 				font-size: 1em;
 /*BG Version 1*/
-				background: url('images/bg_fresh.jpg');
+				background: url('images/bg_blue.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
@@ -51,7 +51,7 @@
     			background-size: contain;*/
 			}
 			.simBG {
-				background: url('images/bg_fresh.jpg');
+				background: url('images/bg_blue.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
@@ -222,7 +222,7 @@
 			#formHolder>div {
 				margin: auto;
 /* 		 		display: block;  */
-/* 		 		text-align: left;  */
+ 		 		text-align: center;  
 				padding: 2px;
 			}
 			#subjectType>label {
@@ -354,12 +354,20 @@
  	 			$( '#logoImage, #logoText' ).click(function(){
  	 	 			$( '#logo' ).click();
  	 			});
- 	 			buttonsSubject = new Array();
- 	 			buttonsSubject.push({ text: "เพิ่มวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=add'; } , cssIcon: "fa icon-plus", cssLabel: "", cssItem: "itemRadial" });
- 	 			buttonsSubject.push({ text: "แก้ไขวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=edit'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
- 	 			buttonsSubject.push({ text: "เปิดวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=subjectRegistrar'; }, cssIcon: "fa icon-folder-add", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel = new Array();
+ 	 			buttonsModel.push({ text: "เพิ่มวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=add'; } , cssIcon: "fa icon-plus", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel.push({ text: "แก้ไขวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=edit'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel.push({ text: "เปิดวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=subjectRegistrar'; }, cssIcon: "fa icon-folder-add", cssLabel: "", cssItem: "itemRadial" });
  	 			$("#menuSubject").ninjaRadial({
- 	 			     buttons: buttonsSubject,
+ 	 			     buttons: buttonsModel,
+ 	                backColor: "rgba(20,20,20,0.7)",
+ 	                borderColor: "rgba(200,200,200,0.1)"
+ 	 			});
+ 	 			buttonsModel = new Array();
+ 	 			buttonsModel.push({ text: "คะแนน", click: function (e, obj) { window.location.href = '?action=report&type=score'; } , cssIcon: "fa icon-attachment-outline", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel.push({ text: "เวลาเรียน", click: function (e, obj) { window.location.href = '?action=report&type=attendance'; } , cssIcon: "fa icon-stopwatch", cssLabel: "", cssItem: "itemRadial" });
+ 	 			$("#menuReport").ninjaRadial({
+ 	 			     buttons: buttonsModel,
  	                backColor: "rgba(20,20,20,0.7)",
  	                borderColor: "rgba(200,200,200,0.1)"
  	 			});
@@ -424,7 +432,7 @@
 				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
 				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
 				<?php 		}?>
-				<a href="?action=report" class="icon-pie-outline">รายงาน</a>
+				<a href="#" class="icon-pie-outline" id="menuReport">รายงาน</a>
 				<?php } else {?>
 				<a href="#" class="icon-star">Favorites</a>
 				<a href="#" class="icon-mail">Messages</a>
