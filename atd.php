@@ -46,15 +46,15 @@
 /* 				height: 768px; */
 				margin: 0px;
 				font-size: 12pt;
-				background: url('images/bg_blue.jpg');
+				background: url('images/bg_fresh.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
 			}
 /* 			.mainContainer { */
 			.simBG {
-				color: #EEE;
-				background: rgba(0,0,0,0.3);
+				color: #333;
+				background: rgba(255,255,255,0.3);
 			}
 			fieldset {
 				border: 2px solid #CCCCCC;
@@ -182,13 +182,22 @@
 				    scrollY: 280,
 				    "order": [2,'desc'],
 				    "orderFixed": [2,'desc'],
-				    "columns": [{ data: "id","orderable": false },{ data: "name","orderable": false },{ data: "status","orderable": false }],
-				    ajax:  {
-			            url: "dataCenter.php",
-			            type: 'POST',
-			            data: {"action": "get","type":"atdList","atdID":"01"}
-			        }
-				} );
+				    "columns": [{ data: "id","orderable": false },{ data: "name","orderable": false },{ data: "status","orderable": false }]
+// 			    ,
+// 				    ajax:  {
+// 			            url: "dataCenter.php",
+// 			            type: 'POST',
+// 			            data: {"action": "get","type":"atdList","atdID":"01"}
+// 			        }
+				});
+				$.post('dataCenter.php',{"action": "get","type":"atdList","atdID":"01"},function(data){
+					var res = $.parseJSON(data);
+					if(res.data){
+						for(var i=0; i<res.data.length; i++){
+							studentListVar.row.add(res.data[i]).draw();
+						}
+					}
+				});
 				$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
 				$( "#opener" ).click(function() {
 					$( "#studentCard" ).dialog( "open" );
@@ -248,6 +257,7 @@
 						if(dataR.status=="SUCCESS"){
 							console.info('Call onSuccessAtd Function');
 							onSuccesAtd(dataR.data[0].studentID);
+							studentListVar.row.add(dataR.atdData).draw();
 					    	playSound('images/sounds/pass.mp3');
 						} else {
 							var reason = dataR.data[0].reason;
@@ -279,7 +289,7 @@
 			function onSuccesAtd(dataR){
 				console.log('Attendance List Reload.');
 				loadCard(dataR);
-				studentListVar.ajax.reload();
+// 				studentListVar.ajax.reload();
 			}
 			function playSound(file){
 				audioElement = document.createElement('audio');

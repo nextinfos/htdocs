@@ -151,10 +151,11 @@ if($action=="get"){
 								"status"=> $status[$row['status']]);
 					}
 				} else {
-					$data['data'][] = array(
-							"id"=> '',
-							"name"=> 'ไม่พบข้อมูล',
-							"status"=> '');
+// 					$data['data'][] = array(
+// 							"id"=> '',
+// 							"name"=> 'ไม่พบข้อมูล',
+// 							"status"=> '');
+					$data['data'] = NULL;
 				}
 			}
 		}
@@ -377,7 +378,19 @@ if($action=="get"){
 } elseif($action=="set"){
 	if($type=="atdList"){
 		if($atdID){
-			$strSQL = "SELECT subjectID, registerID,date FROM `attendanceinfo` WHERE attendanceID = '$atdID';";
+			$strSQL = sprintf(
+				"
+				SELECT
+					subjectID,
+					registerID,
+					date
+				FROM
+					`attendanceinfo`
+				WHERE
+					attendanceID = '%s'
+				",
+				mysql_real_escape_string($atdID)
+			);
 			$objQuery = mysql_query($strSQL);
 			if($objQuery){
 				$row = mysql_fetch_array($objQuery);
@@ -389,8 +402,8 @@ if($action=="get"){
 						$studentID = getStdFromCard($cardID);
 					}
 					if($studentID){
-						$stdIsReg = isStdRegis($studentID,$atdID);
-						if($stdIsReg){
+// 						$stdIsReg = isStdRegis($studentID,$atdID);
+						if(isStdRegis($studentID,$atdID)){
 							$late = $_SESSION['atdLate'];
 							if(!isCheckedIn($studentID, $atdID)){
 								if(date('Y-m-d H:i:s',strtotime($startDateTime.' +'.$late.' minute 2 second'))>date('Y-m-d H:i:s',strtotime('Today '.$time))) $status = 'ONTIME'; else $status = 'LATE';
@@ -398,9 +411,15 @@ if($action=="get"){
 								$objQuery = mysql_query($strSQL);
 								if($objQuery){
 									$data['status'] = "SUCCESS";
+									$cardInfo = getCardInfo($studentID);
 									$data['data'][] = array(
 											"responseText"=>"Added",
-											"studentID"=>getCardInfo($studentID)
+											"studentID"=>$cardInfo
+									);
+									$data['atdData'] = array(
+										"id"=>$cardInfo['data'][0]['id'],
+										"name"=>$cardInfo['data'][0]['fname']."   ".$cardInfo['data'][0]['lname'],
+										"status"=>ucfirst(strtolower($status))
 									);
 								} else {
 									$data['status'] = "FAIL";

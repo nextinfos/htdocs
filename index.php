@@ -35,13 +35,13 @@
 			}
  			body {
  				overflow: hidden;
- 				color: #EEE;
+ 				color: #333;
 /* 				width: 1024px; */
 /* 				height: 768px; */
 				margin: 0px;
 				font-size: 1em;
 /*BG Version 1*/
-				background: url('images/bg_blue.jpg');
+				background: url('images/bg_fresh.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
@@ -51,7 +51,7 @@
     			background-size: contain;*/
 			}
 			.simBG {
-				background: url('images/bg_blue.jpg');
+				background: url('images/bg_fresh.jpg');
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;

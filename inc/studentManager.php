@@ -31,6 +31,30 @@
 	}
 </style>
 <script>
+	String.prototype.replaceArray = function(find, replace) {
+		  var replaceString = this;
+		  for(var j = 0; j < this.length; j++){
+			  for (var i = 0; i < find.length; i++) {
+			    replaceString = replaceString.replace(find[i], replace[i]);
+			  }
+		  }
+		  return replaceString;
+		};
+	function convertCard(id){
+		console.info('Card detect ID : '+id);
+		var res = id;
+		if($.isNumeric(id)){
+			res = id;
+		} else {
+			var thn = ['ๅ','/','-','ภ','ถ','ุ','ึ','ค','ต','จ'];
+			var thc = ['+','๑','๒','๓','๔','ู','฿','๕','๖','๗'];
+			var num = ['1','2','3','4','5','6','7','8','9','0'];
+			res = res.replaceArray(thn, num);
+			res = res.replaceArray(thc, num);
+			console.debug('Convert card to number ID : '+res);
+		}
+		return res;
+	}
 	$(function(){
 		$('input:text, input:password').button().css({
 			'font' : 'inherit',
@@ -106,6 +130,7 @@
 							while(cardID.length<10){
 								if(cardID = prompt('กรอกรหัส RFID 10 หลักแรก หรือ แตะบัตรที่เครื่อง A\n(เว้นว่างไว้หากยังไม่ต้องการผู้บัตร)')){
 									if(cardID=='') break;
+									cardID=convertCard(cardID);
 									if($.isNumeric(cardID)==false) cardID = '';
 								} else {
 									cardID='';
@@ -115,8 +140,9 @@
 						}
 						if(secondCardID==''){
 							while(secondCardID.length<8) {
-								if(secondCardID = prompt('กรอกรหัส RFID 8 หลักหลัง หรือ แตะบัตรที่เครื่อง B)')){
+								if(secondCardID = prompt('กรอกรหัส RFID 8 หลักหลัง หรือ แตะบัตรที่เครื่อง B\n(เว้นว่างไว้หากยังไม่ต้องการผู้บัตร)')){
 									if(secondCardID=='') break;
+									secondCardID = convertCard(secondCardID);
 									if($.isNumeric(secondCardID)==false) secondCardID = '';
 								} else {
 									secondCardID='';
