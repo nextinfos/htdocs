@@ -121,6 +121,38 @@ function isCheckedIn($studentID,$atdID){
 	}
 	return $result;
 }
+function getStuRegList($subjectID,$instructorID,$year,$term){
+	$strSQL = sprintf(
+			"
+			SELECT
+				stu.cardID,
+				stu.secondCardID,
+				stu.studentID,
+				stu.firstName,
+				stu.lastName,
+				regstu.grade
+			FROM
+				`student` stu INNER JOIN `register-student` regstu
+				ON stu.studentID = regstu.studentID
+			WHERE
+				regstu.subjectID = '%s' AND
+				regstu.registerID =
+				(
+					SELECT
+						registerID
+					FROM
+						registerinfo
+					WHERE
+						term = '%s' AND
+						year = '%s'
+				)
+			",
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+	);
+	return mysql_query($strSQL);
+}
 if($action=="get"){
 	if($type=="atdList"){
 		if($atdID){
@@ -160,48 +192,12 @@ if($action=="get"){
 			}
 		}
 		echo json_encode($data);
-	} elseif($type=="stuRegList"){
+	} elseif($type=="stuScoList"){
 		$subjectID = $_REQUEST['subjectID'];
 		$instructorID = $confUserID;
 		$term = getTerm();
 		$year = getYear();
-		$strSQL = sprintf(
-			"
-			SELECT
-				stu.cardID,
-				stu.secondCardID,
-				stu.studentID,
-				stu.firstName,
-				stu.lastName
-			FROM
-				`student` stu
-			WHERE
-				stu.studentID
-				IN
-				(
-					SELECT
-						studentID
-					FROM
-						`register-student`
-					WHERE
-						subjectID = '%s' AND
-						registerID =
-						(
-							SELECT
-								registerID
-							FROM
-								registerinfo
-							WHERE
-								term = '%s' AND
-								year = '%s'
-						)
-				)
-			",
-			mysql_real_escape_string($subjectID),
-			mysql_real_escape_string($term),
-			mysql_real_escape_string($year)
-		);
-		$objQuery = mysql_query($strSQL);
+		$objQuery = getStuRegList($subjectID, $instructorID, $year, $term);
 		if($objQuery&&mysql_num_rows($objQuery)>0){
 			while($row=mysql_fetch_array($objQuery)){
 				$data['data'][] = array(
@@ -210,7 +206,7 @@ if($action=="get"){
 						'studentID'=>$row['studentID'],
 						'firstName'=>$row['firstName'],
 						'lastName'=>$row['lastName'],
-						'score'=>'<input type="text" name="score" />'
+						'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" />'
 				);
 			}
 		} else {
@@ -221,6 +217,33 @@ if($action=="get"){
 					'firstName'=>'ไม่พบข้อมูล',
 					'lastName'=>'',
 					'score'=>''
+			);
+		}
+		echo json_encode($data);
+	} elseif($type=="stuRegList"){
+		$subjectID = $_REQUEST['subjectID'];
+		$instructorID = $confUserID;
+		$term = getTerm();
+		$year = getYear();
+		$objQuery = getStuRegList($subjectID, $instructorID, $year, $term);
+		if($objQuery&&mysql_num_rows($objQuery)>0){
+			while($row=mysql_fetch_array($objQuery)){
+				$data['data'][] = array(
+						'cardID'=>'<span style="display:none;">'.$row['cardID'].'&nbsp'.$row['secondCardID'].'</span>',
+//						'secondCardID'=>'<span style="display:none;">'.$row['secondCardID'].'</span>',
+						'studentID'=>$row['studentID'],
+						'firstName'=>$row['firstName'],
+						'lastName'=>$row['lastName'],
+						'grade'=>$row['grade']==NULL?'--':$row['grade']
+				);
+			}
+		} else {
+			$data['data'][] = array(
+					'cardID'=>'',
+					'studentID'=>'',
+					'firstName'=>'ไม่พบข้อมูล',
+					'lastName'=>'',
+					'grade'=>''
 			);
 		}
 		echo json_encode($data);
