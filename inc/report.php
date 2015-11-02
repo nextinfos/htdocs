@@ -1,5 +1,26 @@
 <?php
 	$type = $_GET['type']; 
+	function getPercentile($array){
+		arsort($array);
+		$i=0;
+		$total = count($array);
+		$percentiles = array();
+		$previousValue = -1;
+		$previousPercentile = -1;
+		foreach ($array as $key => $value) {
+			echo "\$array[$key] => $value<br/>";
+			if ($previousValue == $value) {
+				$percentile = $previousPercentile;
+			} else {
+				$percentile = 100 - $i*100/$total;
+				$previousPercentile = $percentile;
+			}
+			$percentiles[$key] = $percentile;
+			$previousValue = $value;
+			$i++;
+		}
+		return $percentiles;
+	}
 ?>
 <style>
 	div.tablelHolder {
@@ -305,6 +326,7 @@
 				}
 				mysql_free_result($objQuerya);
 				$per = @round($sumScore/$sumMaxScore*100,2);
+				$scoreArray[$studentID] = $sumScore;
 				if($per<$warnPer&&$per>=$lowPer){
 					$per = '<span class="warnPer">'.$per.'</span>';
 					$rowClass = 'warn';
@@ -319,6 +341,7 @@
 				$report.='</tr>'."\n";
 			}
 			$report.='</table>'."\n";
+			print_r(getPercentile($scoreArray));
 		} else {
 			$report.="ไม่พบข้อมูล";
 		}

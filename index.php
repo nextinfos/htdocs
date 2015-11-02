@@ -430,7 +430,7 @@
 				<a href="#" class="icon-personadd">เพิ่มข้อมูลครู</a>
 				<?php 		} else {?>
 				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
-				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
+				<a href="#" onclick="alert('ยังไม่เปิดใช้งาน');" class="icon-book">การลงคะแนน</a>
 				<?php 		}?>
 				<a href="#" class="icon-pie-outline" id="menuReport">รายงาน</a>
 				<?php } else {?>
