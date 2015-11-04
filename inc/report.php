@@ -35,6 +35,37 @@
 	}
 	.dataTableShow, .statusHolder {
 		background-color: white;
+		margin: auto;
+	}
+		#formHolder {
+		margin: auto;
+		display: table;
+	}
+	#formHolder>div {
+		margin: auto;
+/* 		display: block; */
+/* 		text-align: left; */
+		padding: 2px;
+		text-align: center;
+	}
+	#subjectType>label {
+		width: 114px;
+		height: 33px;
+	}
+	#subjectType>label>span,#term>label>span {
+		padding-top: 5px;
+	}
+	#term>label {
+		width: 50px;
+	}
+	#year {
+		width: 150px;
+	}
+	.spacer {
+		height: 5px;
+	}
+	.leftCell {
+		padding-left: 5px !important;
 	}
 </style>
 <script>
@@ -145,7 +176,7 @@
 		$subjectData = "<option>ไม่มีวิชาเรียน</option>";
 	}
 	if($_GET['subjectID']&&$subjectInfo){
-		$subInfo = "<br/>ข้อมูลรายวิชา : $subjectInfo<br/>";
+		$subInfo = "<div class='subInfo'>ข้อมูลรายวิชา : $subjectInfo</div>";
 		$report = "<hr/>";
 		$startTime = microtime_float();
 		$strSQL = "SELECT *  FROM `attendanceinfo` atd, `register-subject` regsub, `registerinfo` reg WHERE regsub.subjectID = '".$_GET['subjectID']."' AND regsub.subjectID = atd.subjectID AND regsub.registerID = atd.registerID AND atd.registerID = reg.registerID AND reg.term='$term' AND reg.year = '$year' ORDER BY atd.date;";
@@ -239,8 +270,8 @@
 			.low { background-color: rgba(255,0,0,0.3);}
 			.warn { background-color: rgba(255,255,0,0.3);}
 			.pass { background-color: rgba(0,255,0,0.3);}
-			input[type=number] {
-				width: 30px;
+			input.spinnerBox {
+				width: 35px;
 			}
 			img.icon {
 				width: 15px;
@@ -277,29 +308,68 @@
 				margin: 15px;
 				display: table-cell;
 			}
+			.ah>span {
+				font-weight: normal;
+			}
+			#subjectID {
+				width: 320px;
+			}
+			.subInfo {
+				text-align: center;
+			}
 			@media print {
 				.noPrint {
 					display: none;
 				}
 			}
 		</style>
-		<div class="noPrint">
+		<script>
+			$(function(){
+				$( '#term' ).buttonset();
+				$( "#year" ).selectmenu();
+				$( "#subjectID" ).selectmenu();
+				$( ".spinnerBox" ).spinner();
+			});
+		</script>
+	<div class="noPrint">
 		<form method="GET">
 			<input type="hidden" name="action" value="report" />
 			<input type="hidden" name="type" value="attendance" />
-			<input type="radio" name="term" value="1"<?php echo $term==1?' checked':radioTerm(1);?>>1
-			<input type="radio" name="term" value="2"<?php echo $term==2?' checked':radioTerm(2);?>>2
-			<input type="radio" name="term" value="3"<?php echo $term==3?' checked':radioTerm(3);?>>3
-			<select name="year">
-				<?php $year = date("Y"); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
-			</select>
-			<select name="subjectID">
-				<?php echo $subjectData;?>
-			</select><br/>
-			หมดสิทธ์สอบเมื่อเข้าเรียนต่ำกว่า : <input type="number" value="50" step="5" name="lowPer">%<br/>
-			แจ้งเตือนเมื่อเข้าเรียนต่ำกว่า : <input type="number" value="65" step="5" name="warnPer">%<br/>
-			<input type="submit" value="ดูข้อมูล">
+			<div id="formHolder">
+				<div class="leftCell">ภาคการศึกษา : </div>
+				<div id="term">
+					<input type="radio" name="term" id="t1" value="1"<?php echo $term==1?' checked':radioTerm(1);?>><label for="t1">1</label>
+					<input type="radio" name="term" id="t2" value="2"<?php echo $term==2?' checked':radioTerm(2);?>><label for="t2">2</label>
+					<input type="radio" name="term" id="t3" value="3"<?php echo $term==3?' checked':radioTerm(3);?>><label for="t3">3</label>
+				</div>
+				<div class="spacer"></div>
+				<div class="leftCell">ปีการศึกษา : </div>
+				<div>
+					<select name="year" id="year">
+						<?php $year = date("Y"); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
+					</select>
+				</div>
+				<div class="spacer"></div>
+				<div class="leftCell">วิชา : </div>
+				<div>
+					<select name="subjectID" id="subjectID">
+						<?php echo $subjectData;?>
+					</select>
+				</div>
+				<div class="spacer"></div>
+				<div>
+					หมดสิทธ์สอบเมื่อเข้าเรียนต่ำกว่า : <input type="text" class="spinnerBox" value="50" step="5" name="lowPer" min="0" max="100">%<br/>
+				</div>
+				<div class="spacer"></div>
+				<div>
+					แจ้งเตือนเมื่อเข้าเรียนต่ำกว่า : <input type="text" class="spinnerBox" value="65" step="5" name="warnPer" min="0" max="100">%<br/>
+				</div>
+				<div class="spacer"></div>
+				<div>
+					<input type="submit" value="ดูข้อมูล">
+				</div>
+			</div>
 		</form>
-		</div>
+	</div>
 		<?php echo $subInfo.$report;?>
 <?php }?>
