@@ -158,14 +158,13 @@
 						scoreType: $( '#scoreType' ).val(),
 						scoreMax: $( '#scoreMax' ).val()
 					},function(data){
-						data = $.parseJSON(data);
 						studentListVar.ajax.reload();
 						switch($('#scoreType').val()){
 							case "TASK":	var type = 'คะแนนชิ้นงาน'; break;
 							case "QUIZ":	var type = 'คะแนนตอบคำถาม'; break;
 							case "EXAM":	var type = 'คะแนนสอบ'; break;
 						}
-						$( '#infoSubName' ).html($( 'option[value='+data.subjectID+']' ).html());
+						$( '#infoSubName' ).html($( 'option[value='+$( '#subject' ).val()+']' ).html());
 						$( '#infoScoreType' ).html(type);
 						$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
 						$( '#edit' ).show('fade', 500);
