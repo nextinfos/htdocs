@@ -153,6 +153,7 @@
 				event.preventDefault();
 				if($('#subject').val()!=0){
 					data = $.parseJSON(data);
+					var scoreID = data.scoreID; 
 					$.post('dataCenter.php',{
 						action: 'set',
 						type: 'setScoreInfo',
