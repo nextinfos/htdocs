@@ -2,12 +2,16 @@
 	session_start();
 	date_default_timezone_set("Asia/Bangkok");
 	$noPhoto = 'images/noPhoto.jpg';
-	$objConnect = mysql_connect("localhost","utccictc_tss","1d6QHmik");
+	$objConnect = @mysql_connect("localhost","utccictc_tss","1d6QHmik");
 // 	$objConnect = mysql_connect("localhost","root","");
 	if($objConnect){
 		$objDB = mysql_select_db("utccictc_tss");
 // 		$objDB = mysql_select_db("tss_old");
 		mysql_query("SET character_set_results = 'utf8', character_set_client = 'utf8', character_set_connection = 'utf8', character_set_database = 'utf8', character_set_server = 'utf8'", $objConnect);
+		if($_REQUEST['systemErrorCheck']=='1'){ echo '{"status":"OK"}'; exit();}
+	} else {
+		$error = 'DBFAIL';
+		require_once('error.php');
 	}
 	if($_SESSION['userID']&&$_SESSION['userType']){
 		if($_POST['logout']){
