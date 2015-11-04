@@ -152,6 +152,7 @@
 		$('#search').button().click(function(event){
 				event.preventDefault();
 				if($('#subject').val()!=0){
+					data = $.parseJSON(data);
 					$.post('dataCenter.php',{
 						action: 'set',
 						type: 'setScoreInfo',
