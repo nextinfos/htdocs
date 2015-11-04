@@ -29,7 +29,7 @@
 	#studentList_paginate {
 		padding-right: 20px;
 	}
-	#edit, #search {
+	#edit, #search, #cancel {
 		display: none;
 	}
 	.scoreSpinner {
@@ -152,19 +152,27 @@
 		$('#search').button().click(function(event){
 				event.preventDefault();
 				if($('#subject').val()!=0){
-					studentListVar.ajax.reload();
-					switch($('#scoreType').val()){
-						case "TASK":	var type = 'คะแนนชิ้นงาน'; break;
-						case "QUIZ":	var type = 'คะแนนตอบคำถาม'; break;
-						case "EXAM":	var type = 'คะแนนสอบ'; break;
-					}
-					$( '#infoSubName' ).html($( 'option[value='+$( '#subject' ).val()+']' ).html());
-					$( '#infoScoreType' ).html(type);
-					$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
-					$( '#edit' ).show('fade', 500);
-					$( '#search' ).hide('fade', 500);
-					$( '#scoreInfoConf' ).hide('blind', 500);
-					$( '.studentList' ).show('blind', 500);
+					$.post('dataCenter.php',{
+						action: 'set',
+						type: 'setScoreInfo',
+						scoreType: $( '#scoreType' ).val(),
+						scoreMax: $( '#scoreMax' ).val()
+					},function(data){
+						data = $.parseJSON(data);
+						studentListVar.ajax.reload();
+						switch($('#scoreType').val()){
+							case "TASK":	var type = 'คะแนนชิ้นงาน'; break;
+							case "QUIZ":	var type = 'คะแนนตอบคำถาม'; break;
+							case "EXAM":	var type = 'คะแนนสอบ'; break;
+						}
+						$( '#infoSubName' ).html($( 'option[value='+data.subjectID+']' ).html());
+						$( '#infoScoreType' ).html(type);
+						$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
+						$( '#edit' ).show('fade', 500);
+						$( '#search, #cancel' ).hide('fade', 1);
+						$( '#scoreInfoConf' ).hide('blind', 500);
+						$( '.studentList' ).show('blind', 500);
+					});
 				} else {
 					alert('กรุณาเลือกวิชา');
 				}
@@ -179,11 +187,32 @@
 			$( '#scoreInfoConf' ).show('blind', 500);
 			$( '.studentList' ).hide('blind', 500);
 			$( '#scoreInfoSelectHolder' ).hide('blind', 500);
-			$( '#search' ).show('fade', 500);
+			$( '#search, #cancel' ).show('fade', 500);
+			$( '#addStatus' ).val('1');
+		});
+		$( '#cancel' ).button().click(function(){
+			if($( '#addStatus' ).val()=='1'){
+				$( '#scoreInfoConf' ).hide('blind', 500);
+				$( '#scoreInfoSelectHolder' ).show('blind', 500);
+			} else if($( '#addStatus' ).val()=='2'){
+				$( '#scoreInfoConf' ).hide('blind', 500);
+				$( '.studentList' ).show('blind', 500);
+			}
+			$( '#cancel, #search' ).hide('fade', 500);
+			$( '#addStatus' ).val('0');
 		});
 		$( '#save' ).button().click(function(){
-			console.log(genScore());
-			console.log(genStudentID());
+			$.post('dataCenter.php',{
+				action:'set',
+				type:'setScore',
+				scoreID:$( '#scoreInfoSelector' ).val(),
+				score:JSON.stringify(genScore()),
+				studentID:JSON.stringify(genStudentID())},
+				function(data){
+					data = $.parseJSON(data);
+					console.log(data);
+					alert(data.sizeOf);
+			});
 		});
 		$('fieldset').addClass("ui-corner-all");
 		$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
@@ -198,7 +227,7 @@
 	</div>
 	<div id="scoreInfoConf">
 		<div class="leftCell">
-			<h3>ข้อมูลการลงคะแนน</h3>
+			<h3>กรอกข้อมูลการลงคะแนน</h3>
 		</div>
 		<div class="spacer"></div>
 		<div>
@@ -216,7 +245,7 @@
 	</div>
 	<div id="scoreInfoSelectHolder">
 		<div class="leftCell">
-			<h3>ข้อมูลการลงคะแนน</h3>
+			<h3>เลือกข้อมูลการลงคะแนน</h3>
 		</div>
 		<div class="spacer"></div>
 		<div>
@@ -231,8 +260,9 @@
 		</div>
 	</div>
 	<div>
-		<input type="submit" id="search" value="บันทึกการลงคะแนน">
-		<input type="submit" id="edit" value="แก้ไข">
+		<input type="submit" id="search" value="บันทึกการลงคะแนน"/>
+		<input type="submit" id="edit" value="แก้ไข"/>
+		<input type="submit" id="cancel" value="ยกเลิก"/>
 	</div>
 	<div class="studentList">
 		<fieldset class="studentListContainer">
@@ -261,6 +291,7 @@
 		<input type="submit" id="save" value="บันทึก"/>
 	</div>
 </div>
+<input type="hidden" id="addStatus" value="0">
 <?php
 	
 ?>

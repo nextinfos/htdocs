@@ -153,6 +153,76 @@ function getStuRegList($subjectID,$instructorID,$year,$term){
 	);
 	return mysql_query($strSQL);
 }
+function checkScoreExist($scoreID,$studentID){
+	$strSQL = sprintf(
+			"
+			SELECT
+				*
+			FROM
+				`studentscore` stusco 
+			WHERE
+				stusco.scoreID = '%s' AND
+				stusco.studentID = '%s'
+			",
+			mysql_real_escape_string($scoreID),
+			mysql_real_escape_string($studentID)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery&&mysql_num_rows($objQuery)>=1)
+		return true;
+	else
+		return false;
+}
+function scoreModify($scoreID,$studentID,$score){
+	$strSQL = sprintf(
+			"
+			UPDATE
+				`studentscore` stusco
+			SET
+				stusco.score = '%s'
+			WHERE
+				stusco.scoreID = '%s' AND
+				stusco.studentID = '%s'
+			",
+			mysql_real_escape_string($score),
+			mysql_real_escape_string($scoreID),
+			mysql_real_escape_string($studentID)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery)
+		return true;
+	else
+		return false;
+}
+function scoreSet($scoreID,$studentID,$score){
+	if(checkScoreExist($scoreID,$studentID)){
+		$result = scoreModify($scoreID,$studentID,$score);
+	} else {
+		$strSQL = sprintf(
+				"
+				INSERT INTO 
+					`studentscore`
+				(
+					SELECT
+						scoreID,'%s',subjectID,registerID,'%s'
+					FROM
+						`scoreinfo`
+					WHERE
+						scoreID = '%s'
+				)
+				",
+				mysql_real_escape_string($studentID),
+				mysql_real_escape_string($score),
+				mysql_real_escape_string($scoreID)
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery)
+			$result = true;
+		else
+			$result = false;
+	}
+	return $result;
+}
 if($action=="get"){
 	if($type=="atdList"){
 		if($atdID){
@@ -586,6 +656,47 @@ if($action=="get"){
 		} else {
 			echo "UNVALID";
 		}
+	} elseif($type=="setScore"){
+		$scoreID = $_REQUEST['scoreID'];
+		$score = json_decode($_REQUEST['score']);
+		$studentID = json_decode($_REQUEST['studentID']);
+		$result['sizeOf'] = sizeof($score);
+		for($i=0;$i<sizeof($score);$i++){
+			$result['data'][$studentID[$i]] = $score[$i];
+			if($score[$i]!=''){
+				if(!scoreSet($scoreID, $studentID[$i], $score[$i])){
+					$result['error'][$studentID[$i]] = TRUE;
+				}
+			}
+		} 
+		echo json_encode($result);
+	} elseif($type=="setScoreInfo"){
+		$strSQL = sprintf(
+			"
+			INSERT INTO
+				scoreinfo
+				(
+				SELECT
+					NULL,
+					'%s',
+					'registerID',
+					'%s',
+					'%s',
+					'%s'
+				FROM
+					registerinfo
+				WHERE
+					term = '%s' AND
+					year = '%s'
+				)
+			",
+				mysql_real_escape_string($subjectID),
+				mysql_real_escape_string($date),
+				mysql_real_escape_string($scoreType),
+				mysql_real_escape_string($socreMax),
+				mysql_real_escape_string(getTerm()),
+				mysql_real_escape_string(getYear())
+		);
 	}
 } else {
 ?>

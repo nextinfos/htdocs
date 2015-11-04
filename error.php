@@ -1,9 +1,17 @@
 <?php
-	require_once 'config.php';
-	if(!$confUserID) $action = 'login'; else $action = $_GET['action'];
-	if(!$action) $action = 'index';
-	$filename = 'inc/'.$action.'.php';
-	if(!file_exists($filename)) $filename = 'inc/404.php';
+	if($_REQUEST['systemErrorCheck']=="1"){
+		if($_REQUEST['errorPage']=="1") {
+			echo '1';
+		} else {
+			$value['status'] = '1';
+			echo json_encode($value);
+		}
+		exit();
+	}
+	switch($error){
+		case 'DBFAIL': $reason='ไม่สามารถติดต่อฐานข้อมูลได้'; break;
+		default: $reason='ไม่ทราบสาเหตุ';	break;
+	}
 ?>
 <!DOCTYPE html>
 <html>
@@ -17,18 +25,8 @@
 		<link rel="icon" type="image/png" href="images/favicon.png" />
 		<link rel="apple-touch-icon" href="images/icon.png">
 		<link href="scripts/jquery-ui/jquery-ui.css" rel="stylesheet">
-		<link href="scripts/jquery-ui/dataTables/jquery.dataTables.css" rel="stylesheet">
-		<link rel="stylesheet" type="text/css" href="scripts/normalize.css" />
-		<link rel="stylesheet" type="text/css" href="scripts/component.css" />
-		<link href="scripts/NinjaRadial.css" rel="stylesheet" type="text/css" />
 		<script src="scripts/jquery-ui/external/jquery/jquery.js"></script>
  		<script src="scripts/jquery-ui/jquery-ui.js"></script>
- 		<script src="scripts/clock.js"></script>
- 		<script src="scripts/ZeroClipboard.js"></script>
- 		<script src="scripts/jquery-ui/dataTables/jquery.dataTables.js"></script>
- 		<script type="text/javascript" src="scripts/jquery.canvasjs.min.js"></script>
- 		<script src="scripts/comboBox.js"></script>
-		<script src="scripts/NinjaRadial.js" type="text/javascript"></script>
  		<style>
  			html, body {
 			    height:100%;
@@ -45,10 +43,13 @@
 				background-size: cover !important;
 				background-position: center bottom;
 				background-attachment: fixed;
-/*BG Version 2			
-				background: url("images/bg.png");
-    			background-attachment: fixed;
-    			background-size: contain;*/
+			}
+			.error {
+				color: red;
+			}
+			.reason {
+				color: #CC0000;
+				font-size: 1.8em;
 			}
 			.simBG {
 				background: url('images/bg_fresh.jpg');
@@ -69,10 +70,10 @@
 				background: transparent;
 				overflow-x: hidden;
 				display:none;
-			}
-			.container {
+				min-height: 100%;
 				background: rgba(0,0,0,0.3) !important;
 				box-shadow: 30px 30px 40px rgba(0,0,0,0.3);
+				text-align: center;
 			}
 			.holder {
 				position: relative;
@@ -119,9 +120,6 @@
 				color: white;
 				text-shadow: 0 0 5px #000,0 0 10px #000,0 0 15px #000,0 0 20px #000;
 			}
-			#logoImage:hover, #logoText:hover {
-				cursor: pointer;
-			}
 			#name {
 				top: -80px;
 				left: 0px;
@@ -135,14 +133,6 @@
 				padding-top: 60px;
 				height: inherit;
 			}
-			.outer-nav a {
-				text-shadow: 0 0 1px #FFF;
-				color: #666;
-				text-decoration: none;
-			}
-			.outer-nav a:hover {
-				color: #111;
-			}
 			.ui-widget {
 				font-size: 1em;
 				/*-----Drop Shadow-----*/
@@ -151,14 +141,6 @@
 			.blur {
 				-webkit-filter: blur(5px);
 			}
-			.custom-combobox {
-			    position: relative;
-			    display: inline-block;
-			  }
-			  .custom-combobox-input {
-			    margin: 0;
-			    padding: 5px 10px;
-			  }
 			@media screen and (max-device-width: 480px) {
 				#menuBar {
 					height: 50px;
@@ -185,9 +167,6 @@
 				#innerContent {
 					padding-top: 0px;
 				}
-				.outer-nav a {
-					font-size: 1em;
-				}
 			}
 			#loading {
 				min-height: 100%;
@@ -196,7 +175,7 @@
 				top: 0px;
 				left: 0px;
 				background: rgba(0,0,0,0.3);
-				z-index: 99;
+				z-index: 299;
 			}
 			#loading>div.spinnerHolder {
 				position: absolute;
@@ -205,15 +184,6 @@
 				margin-left: -70px;
 				top: 50%;
 				left: 50%;
-			}
-			.fa {
-			    display: inline-block;
-			    font: normal normal normal 14px/1 'typicons';
-			    font-size: inherit;
-			    text-rendering: auto;
-			    -webkit-font-smoothing: antialiased;
-			    -moz-osx-font-smoothing: grayscale;
-			    transform: translate(0, 0);
 			}
 			#formHolder {
 				margin: auto;
@@ -243,6 +213,16 @@
 			}
 			.leftCell {
 				padding-left: 5px !important;
+			}
+			.ui-dialog-titlebar-close {
+				display: none !important;
+			}
+			#dialog {
+				text-align: center;
+			}
+			.ui-widget-header {
+				background: #EE0000 url("images/ui-bg_highlight-soft_75_EE0000_1x100.png") 50% 50% repeat-x !important;
+				color: white;
 			}
  		</style>
  		<style type="text/css">
@@ -343,44 +323,25 @@
  					$('#loading' ).hide('fade', '', '1000');
  					$('.mainContainer' ).show('fade', '', '1500');
  				});
- 	 			$('#logout').click(function(){
- 	 				$('body' ).addClass( "blur", 1000);
- 	 				$('.mainContainer' ).effect('fade', '', '1000');
- 	 	 			$.post("index.php",{logout: 'true'})
- 	 	 				.done(function(){
- 	 	 					document.location = "?action=index&ref=logout";
- 	 	 	 			});
- 	 			});
- 	 			$( '#logoImage, #logoText' ).click(function(){
- 	 	 			$( '#logo' ).click();
- 	 			});
- 	 			buttonsModel = new Array();
- 	 			buttonsModel.push({ text: "เพิ่มวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=add'; } , cssIcon: "fa icon-plus", cssLabel: "", cssItem: "itemRadial" });
- 	 			buttonsModel.push({ text: "แก้ไขวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=edit'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
- 	 			buttonsModel.push({ text: "เปิดวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=subjectRegistrar'; }, cssIcon: "fa icon-folder-add", cssLabel: "", cssItem: "itemRadial" });
- 	 			$("#menuSubject").ninjaRadial({
- 	 			     buttons: buttonsModel,
- 	                backColor: "rgba(20,20,20,0.7)",
- 	                borderColor: "rgba(200,200,200,0.1)"
- 	 			});
- 	 			buttonsModel = new Array();
- 	 			buttonsModel.push({ text: "คะแนน", click: function (e, obj) { window.location.href = '?action=report&type=score'; } , cssIcon: "fa icon-attachment-outline", cssLabel: "", cssItem: "itemRadial" });
- 	 			buttonsModel.push({ text: "เวลาเรียน", click: function (e, obj) { window.location.href = '?action=report&type=attendance'; } , cssIcon: "fa icon-stopwatch", cssLabel: "", cssItem: "itemRadial" });
- 	 			$("#menuReport").ninjaRadial({
- 	 			     buttons: buttonsModel,
- 	                backColor: "rgba(20,20,20,0.7)",
- 	                borderColor: "rgba(200,200,200,0.1)"
+ 				$( "#dialog" ).dialog({
+ 					modal: true,
+ 					width: 600,
+ 					height: 300,
+ 					resizeable: false,
+ 					draggable: false,
+ 					show: {
+ 				        effect: "bounce",
+ 				        duration: 1000
+ 				      }
  	 			});
  			});
  			setInterval(function(){
- 				$.post('index.php',{systemErrorCheck: '1'},function(data){
- 	 				if(data = $.parseJSON(data)){
- 	 					if(data.status=='1') document.location = document.location;
- 	 				}
+ 				$( '#dialog' ).effect('highlight',500);
+ 				$.post('index.php',{systemErrorCheck: '1', errorPage: '1'},function(data){
+ 	 				if(data!='1') document.location = document.location;
  	 			});
- 	 		}, 30000);
+ 	 		}, 1000);
  		</script>
- 		<script src="scripts/modernizr.custom.25376.js"></script>
  	</head>
  	<body>
  	<div class="simBG"></div>
@@ -404,50 +365,32 @@
 				</div>
 			</div>
 		</div>
- 		<div class="mainContainer perspective effect-rotateleft" id="perspective">
+ 		<div class="mainContainer">
  			<div class="container">
-				<div class="wrapper">
-		 			<div class="holder">
-		 				<div id="pageNameD">หน้าปัจจุบัน : <span id="pageName">ไม่สามารถระบุได้</span></div>
-		 			</div>
-			 		<div class="holder">
-						<div id="logo">
-							<div id="logoImage"></div>
-							<div id="logoText">โรงเรียนชุมชนบ้านถ้ำสิงห์</div>
-							<div id="name"></div>
-						</div>
-					</div>
-					<div class="holder" style="height:120px;">
-						<div id="menuBar">
-						</div>
-					</div>
-					<div id="innerContent">
-<!-- 						<button id="showMenu">Show Menu</button> -->
-					<?php require_once $filename;?>
+				<div class="holder">
+					<div id="pageNameD">หน้าปัจจุบัน : <span id="pageName">แสดงข้อมูลระบบ</span></div>
+				</div>
+		 		<div class="holder">
+					<div id="logo">
+						<div id="logoImage"></div>
+						<div id="logoText">โรงเรียนชุมชนบ้านถ้ำสิงห์</div>
+						<div id="name"></div>
 					</div>
 				</div>
+				<div class="holder" style="height:120px;">
+					<div id="menuBar">
+					</div>
+				</div>
+				<div id="innerContent">
+					<h1 class="error">เกิดข้อผิดพลาด กรุณาติดต่อผู้พัฒนา</h1>
+					<span class="reason">สาเหตุ: <?php echo $reason;?></span>
+				</div>
 			</div>
-			<nav class="outer-nav right vertical">
-				<a href="?action=index&ref=menu" class="icon-home">หน้าหลัก</a>
-				<?php if($confUserType=="instructor"){?>
-				<?php		if($confSuperUser=="1"){?>
-				<a href="#" class="icon-book" id="menuSubject">จัดการรายวิชา</a>
-				<a href="?action=subjectManager&tag=studentRegistrar" class="icon-persons">ลงทะเบียนนร.</a>
-				<a href="?action=studentManager&tag=add" class="icon-personadd">เพิ่มข้อมูลนร.</a>
-				<a href="#" class="icon-personadd">เพิ่มข้อมูลครู</a>
-				<?php 		} else {?>
-				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
-				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
-				<?php 		}?>
-				<a href="#" class="icon-pie-outline" id="menuReport">รายงาน</a>
-				<?php } else {?>
-				<a href="#" class="icon-star">Favorites</a>
-				<a href="#" class="icon-mail">Messages</a>
-				<?php }?>
-				<?php if($confUserID) echo '<a href="#" id="logout" class="icon-lock">ออกจากระบบ</a>';?>
-			</nav>
  		</div>
- 		<script src="scripts/classie.js"></script>
-		<script src="scripts/menu.js"></script>
+ 		<div id="dialog" title="ข้อผิดพลาด">
+			<h1 class="error">เกิดข้อผิดพลาด กรุณาติดต่อผู้พัฒนา</h1>
+			<span class="reason">สาเหตุ: <?php echo $reason;?></span>
+		</div>
  	</body>
  </html>
+<?php exit();?>
