@@ -15,15 +15,33 @@
 // } else {
 // 	echo "Term 3";
 // }
-function randomPassword($l=8) {
-	$alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
-	$pass = array(); //remember to declare $pass as an array
-	$alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
-	for ($i = 0; $i < $l; $i++) {
-		$n = rand(0, $alphaLength);
-		$pass[] = $alphabet[$n];
-	}
-	return implode($pass); //turn the array into a string
-}
-echo randomPassword(6);
+// function randomPassword($l=8) {
+// 	$alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890';
+// 	$pass = array(); //remember to declare $pass as an array
+// 	$alphaLength = strlen($alphabet) - 1; //put the length -1 in cache
+// 	for ($i = 0; $i < $l; $i++) {
+// 		$n = rand(0, $alphaLength);
+// 		$pass[] = $alphabet[$n];
+// 	}
+// 	return implode($pass); //turn the array into a string
+// }
+// echo randomPassword(6);
+$date = "2015-11-04 13:04:27";
+echo date("N",strtotime($date));
 ?>
+<script>
+new Morris.Line({
+  // ID of the element in which to draw the chart.
+  element: 'myfirstchart',
+  // Chart data records -- each entry in this array corresponds to a point on
+  // the chart.
+  <?php echo $data;?>
+  // The name of the data record attribute that contains x-values.
+  xkey: 'year',
+  // A list of names of data record attributes that contain y-values.
+  ykeys: ['value'],
+  // Labels for the ykeys -- will be displayed when you hover over the
+  // chart.
+  labels: ['Value']
+});
+</scrpit>

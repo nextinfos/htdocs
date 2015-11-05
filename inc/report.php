@@ -1,25 +1,28 @@
 <?php
 	$type = $_GET['type']; 
 	function getPercentile($array){
-		arsort($array);
-		$i=0;
-		$total = count($array);
-		$percentiles = array();
-		$previousValue = -1;
-		$previousPercentile = -1;
-		foreach ($array as $key => $value) {
-			echo "\$array[$key] => $value<br/>";
-			if ($previousValue == $value) {
-				$percentile = $previousPercentile;
-			} else {
-				$percentile = 100 - $i*100/$total;
-				$previousPercentile = $percentile;
+		if(isset($array)&&sizeof($array)>0){
+			arsort($array);
+			$i=0;
+			$total = count($array);
+			$percentiles = array();
+			$previousValue = -1;
+			$previousPercentile = -1;
+			foreach ($array as $key => $value) {
+				if ($previousValue == $value) {
+					$percentile = $previousPercentile;
+				} else {
+					$percentile = 100 - $i*100/$total;
+					$previousPercentile = $percentile;
+				}
+				$percentiles[$key] = $percentile;
+				$previousValue = $value;
+				$i++;
 			}
-			$percentiles[$key] = $percentile;
-			$previousValue = $value;
-			$i++;
+			return $percentiles;
+		} else {
+			return false;
 		}
-		return $percentiles;
 	}
 ?>
 <style>
@@ -263,12 +266,12 @@
 			foreach($scoreList as $key => $value) {
 				$report.= "<th><div class=\"ah\"><span>$value</span><div></th>\n";
 			}
-			$report.='<th>รวม</th><th>เต็ม</th><th>%</th></tr>';
+			$report.='<th>รวม</th><th>เต็ม</th><th>%</th><th>Per</th></tr>';
 			$report.='<tr><th colspan="2" class="maxScore">คะแนนเต็ม</th>';
 			foreach($scoreMax as $key => $value) {
 				$report.= "<th class=\"maxScore\">$value</th>\n";
 			}
-			$report.='<th colspan="3" class="maxScore"></th></tr>';
+			$report.='<th colspan="4" class="maxScore"></th></tr>';
 			$report.='</thead>'."\n";
 			while($row = mysql_fetch_array($objQuery)){
 				$studentID = $row['studentID'];
@@ -337,11 +340,10 @@
 					$rowClass = 'pass';
 				}
 				$report.='<tr class="'.$rowClass.'"><td>'.$row['studentID'].'</td><td>'.$row['firstName'].'&nbsp;&nbsp;&nbsp;'.$row['lastName'].'</td>'."\n".$reportr;
-				$report.="<td>$sumScore</td><td>$sumMaxScore</td><td>$per%</td>\n";
+				$report.="<td>$sumScore</td><td>$sumMaxScore</td><td id='$studentID'>$per%</td>\n";
 				$report.='</tr>'."\n";
 			}
 			$report.='</table>'."\n";
-			print_r(getPercentile($scoreArray));
 		} else {
 			$report.="ไม่พบข้อมูล";
 		}
@@ -426,6 +428,11 @@
 					$( "#year" ).selectmenu();
 					$( "#subjectID" ).selectmenu();
 					$( ".spinnerBox" ).spinner();
+					console.log('<?php echo json_encode(getPercentile($scoreArray));?>');
+					var data = $.parseJSON('<?php echo json_encode(getPercentile($scoreArray));?>');
+					$.each(data, function( index, value ) {
+						 	$( "<td>"+value+"</td>" ).insertAfter( "td[id="+index+"]" );
+						});
 				});
 			</script>
 		<div class="noPrint">
@@ -578,7 +585,7 @@
 						$numbRowInfo = mysql_num_rows($objQueryi);
 						if($numbRowInfo==1){
 							while($rowi = mysql_fetch_array($objQueryi)){
-								$status = $rowi['status']=='ONTIME'?'<img class="icon" src="images/correct.png">':'<img class="icon" src="images/warning.png">';
+								$status = $rowi['status']=='ONTIME'?'<img class="icon" src="images/correct.png">':'<img class="icon" src="images/stopwatch.png">';
 								if($rowi['status'] == 'ONTIME') $intime++;
 								if($rowi['status'] == 'LATE') $late++;
 								$reportr.='<td>'.$status.'</td>';

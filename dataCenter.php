@@ -223,6 +223,29 @@ function scoreSet($scoreID,$studentID,$score){
 	}
 	return $result;
 }
+function getScore($scoreID,$studentID){
+	$strSQL = sprintf(
+			"
+				SELECT
+					score
+				FROM
+					`studentscore`
+				WHERE
+					scoreID = '%s' AND
+					studentID = '%s'
+				",
+			mysql_real_escape_string($scoreID),
+			mysql_real_escape_string($studentID)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery&&mysql_num_rows($objQuery)>0){
+		$row = mysql_fetch_array($objQuery);
+		$result = $row['score'];
+	} else {
+		$result = '';
+	}
+	return $result;
+}
 if($action=="get"){
 	if($type=="atdList"){
 		if($atdID){
@@ -267,6 +290,7 @@ if($action=="get"){
 		$instructorID = $confUserID;
 		$term = getTerm();
 		$year = getYear();
+		$scoreID = $_REQUEST['scoreID'];
 		$objQuery = getStuRegList($subjectID, $instructorID, $year, $term);
 		if($objQuery&&mysql_num_rows($objQuery)>0){
 			while($row=mysql_fetch_array($objQuery)){
@@ -276,7 +300,7 @@ if($action=="get"){
 						'studentID'=>$row['studentID'],
 						'firstName'=>$row['firstName'],
 						'lastName'=>$row['lastName'],
-						'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" />'
+						'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" value="'.getScore($scoreID,$row['studentID']).'" />'
 				);
 			}
 		} else {
@@ -386,7 +410,7 @@ if($action=="get"){
 					)
 				ORDER BY
 					date
-				ASC
+				DESC
 			",
 			mysql_real_escape_string($subjectID),
 			mysql_real_escape_string($term),
@@ -395,7 +419,7 @@ if($action=="get"){
 		$objQuery = mysql_query($strSQL);
 		if(mysql_num_rows($objQuery)>=1){
 			while($row = mysql_fetch_array($objQuery)){
-				$data.='<option value="'.$row['scoreID'].'">'.($row['type']=='TASK'?'ชิ้นงาน':($row['type']=='QUIZ'?'ตอบคำถาม':'สอบ')).' '.$row['maxScore'].' คะแนน ('.(date("d/m/Y H:i")).')</option>';
+				$data.='<option value="'.$row['scoreID'].'">'.($row['type']=='TASK'?'ชิ้นงาน':($row['type']=='QUIZ'?'ตอบคำถาม':'สอบ')).' '.$row['maxScore'].' คะแนน ('.(date("d/m/Y H:i",strtotime($row['date']))).')</option>';
 			}
 		} else {
 			$data = '<option value="0">ไม่พบข้อมูลลงคะแนน</option>';
@@ -467,6 +491,29 @@ if($action=="get"){
 			$data['data'][] = array("studentID"=>"","firstName"=>"","lastName"=>"","gradeYear"=>"");
 			echo json_encode($data);
 		}
+	} elseif($type=="scoreInfo"){
+		$scoreID = $_REQUEST['scoreID'];
+		$strSQL = sprintf(
+			"
+			SELECT
+				type,maxScore
+			FROM
+				`scoreinfo`
+			WHERE
+				scoreID = '%s'
+			LIMIT 1
+			",
+				mysql_real_escape_string($scoreID)
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery){
+			$row = mysql_fetch_array($objQuery);
+			$data['type'] = $row['type'];
+			$data['maxScore'] = $row['maxScore'];
+		} else {
+			$data = NULL;
+		}
+		echo json_encode($data);
 	}
 } elseif($action=="set"){
 	if($type=="atdList"){
@@ -671,32 +718,67 @@ if($action=="get"){
 		} 
 		echo json_encode($result);
 	} elseif($type=="setScoreInfo"){
-		$strSQL = sprintf(
-			"
-			INSERT INTO
-				scoreinfo
-				(
-				SELECT
-					NULL,
-					'%s',
-					'registerID',
-					'%s',
-					'%s',
-					'%s'
-				FROM
-					registerinfo
-				WHERE
-					term = '%s' AND
-					year = '%s'
-				)
-			",
+		$subjectID = $_REQUEST['subjectID'];
+		$scoreType = $_REQUEST['scoreType'];
+		$scoreMax = $_REQUEST['scoreMax'];
+		$scoreID = $_REQUEST['scoreID'];
+		$addStatus = $_REQUEST['addStatus'];
+		$date = date("Y-m-d H:i:s",time());
+		if($addStatus=='1'){
+			$strSQL = sprintf(
+				"
+				INSERT INTO
+					scoreinfo
+					(
+					SELECT
+						NULL,
+						'%s',
+						registerID,
+						'%s',
+						'%s',
+						'%s'
+					FROM
+						registerinfo
+					WHERE
+						term = '%s' AND
+						year = '%s'
+					)
+				",
 				mysql_real_escape_string($subjectID),
 				mysql_real_escape_string($date),
 				mysql_real_escape_string($scoreType),
-				mysql_real_escape_string($socreMax),
+				mysql_real_escape_string($scoreMax),
 				mysql_real_escape_string(getTerm()),
 				mysql_real_escape_string(getYear())
-		);
+			);
+			$objQuery = mysql_query($strSQL);
+			$scoreID = mysql_insert_id();
+			$data['status'] = 'SUCCESS';
+			$data['strSQL']=$strSQL;
+			$data['scoreID'] = $scoreID;
+		} elseif($addStatus=='2') {
+			$strSQL = sprintf(
+				"
+				UPDATE
+					`scoreinfo`
+				SET
+					type = '%s',
+					maxScore = '%s'
+				WHERE
+					scoreID = '%s'
+				",
+					mysql_real_escape_string($scoreType),
+					mysql_real_escape_string($scoreMax),
+					mysql_real_escape_string($scoreID)
+			);
+			$objQuery = mysql_query($strSQL);
+			$data['status'] = 'SUCCESS';
+			$data['strSQL']=$strSQL;
+			$data['scoreID'] = $scoreID;
+		} else {
+			$data['status']='FAIL';
+		}
+		echo json_encode($data);
 	}
 } else {
 ?>
