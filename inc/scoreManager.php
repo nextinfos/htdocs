@@ -145,7 +145,7 @@
 					d.action = "get";
 					d.type = "stuScoList";
 					d.subjectID = $( "#subject" ).val();
-					d.scoreID = $( "#scoreSelector" ).val();
+					d.scoreID = $( "#scoreInfoSelector" ).val();
 				}
 			}
 		});
@@ -155,22 +155,37 @@
 					$.post('dataCenter.php',{
 						action: 'set',
 						type: 'setScoreInfo',
+						subjectID: $( '#subject' ).val(),
 						scoreType: $( '#scoreType' ).val(),
-						scoreMax: $( '#scoreMax' ).val()
+						scoreMax: $( '#scoreMax' ).val(),
+						addStatus: $( '#addStatus' ).val(),
+						scoreID: $( '#scoreInfoSelector' ).val()
 					},function(data){
-						studentListVar.ajax.reload();
+						data = $.parseJSON(data);
 						switch($('#scoreType').val()){
 							case "TASK":	var type = 'คะแนนชิ้นงาน'; break;
 							case "QUIZ":	var type = 'คะแนนตอบคำถาม'; break;
 							case "EXAM":	var type = 'คะแนนสอบ'; break;
 						}
-						$( '#infoSubName' ).html($( 'option[value='+$( '#subject' ).val()+']' ).html());
-						$( '#infoScoreType' ).html(type);
-						$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
-						$( '#edit' ).show('fade', 500);
-						$( '#search, #cancel' ).hide('fade', 1);
-						$( '#scoreInfoConf' ).hide('blind', 500);
-						$( '.studentList' ).show('blind', 500);
+						if(data.status=='SUCCESS'){
+							$( "#scoreInfoSelector" ).load("dataCenter.php", {
+								action: "get",
+								type: "getScoreList",
+								subjectID:$( "#subject" ).val()
+							},function(){
+								$( "#scoreInfoSelector" ).val(data.scoreID);
+								$( "#scoreInfoSelector" ).selectmenu( "refresh" );
+							});
+							studentListVar.ajax.reload();
+							$( '#infoSubName' ).html($( 'option[value='+$( '#subject' ).val()+']' ).html());
+							$( '#infoScoreType' ).html(type);
+							$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
+							$( '#edit' ).show('fade', 500);
+							$( '#search, #cancel' ).hide('fade', 1);
+							$( '#scoreInfoConf' ).hide('blind', 500);
+							$( '.studentList' ).show('blind', 500);
+							$( '#addStatus' ).val('0');
+						}
 					});
 				} else {
 					alert('กรุณาเลือกวิชา');
@@ -179,8 +194,9 @@
 		$( '#edit' ).button().click(function(){
 			$( '#scoreInfoConf' ).show('blind', 500);
 			$( '.studentList' ).hide('blind', 500);
-			$( '#search' ).show('fade', 500);
-			$( '#edit' ).hide('fade', 500);
+			$( '#search, #cancel' ).show('fade', 500);
+			$( '#edit' ).hide('fade', 1);
+			$( '#addStatus' ).val('2');
 		});
 		$( '#add' ).button().click(function(){
 			$( '#scoreInfoConf' ).show('blind', 500);
@@ -195,9 +211,10 @@
 				$( '#scoreInfoSelectHolder' ).show('blind', 500);
 			} else if($( '#addStatus' ).val()=='2'){
 				$( '#scoreInfoConf' ).hide('blind', 500);
+				$( '#edit' ).show('fade', 500);
 				$( '.studentList' ).show('blind', 500);
 			}
-			$( '#cancel, #search' ).hide('fade', 500);
+			$( '#cancel, #search' ).hide('fade', 1);
 			$( '#addStatus' ).val('0');
 		});
 		$( '#save' ).button().click(function(){
@@ -211,6 +228,32 @@
 					data = $.parseJSON(data);
 					console.log(data);
 					alert(data.sizeOf);
+			});
+		});
+		$( '#editScore' ).button().click(function(){
+			$.post('dataCenter.php',{
+					action: 'get',
+					type: 'scoreInfo',
+					scoreID: $( '#scoreInfoSelector' ).val()
+				},function(data){
+					data = $.parseJSON(data);
+				switch(data.type){
+					case "TASK":	var type = 'คะแนนชิ้นงาน'; break;
+					case "QUIZ":	var type = 'คะแนนตอบคำถาม'; break;
+					case "EXAM":	var type = 'คะแนนสอบ'; break;
+				}
+				studentListVar.ajax.reload();
+				$( '#scoreMax' ).val(data.maxScore);
+				$( '#scoreType' ).val(data.type);
+				$( "#scoreType" ).selectmenu( "refresh" );
+				$( '#infoSubName' ).html($( 'option[value='+$( '#subject' ).val()+']' ).html());
+				$( '#infoScoreType' ).html(type);
+				$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
+				$( '#edit' ).show('fade', 1);
+				$( '#search, #cancel' ).hide('fade', 1);
+				$( '#scoreInfoSelectHolder' ).hide('blind', 500);
+				$( '#scoreInfoConf' ).hide('blind', 500);
+				$( '.studentList' ).show('blind', 500);
 			});
 		});
 		$('fieldset').addClass("ui-corner-all");
