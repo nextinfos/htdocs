@@ -223,6 +223,39 @@ function scoreSet($scoreID,$studentID,$score){
 	}
 	return $result;
 }
+function gradeSet($subjectID, $term, $year, $studentID, $grade){
+	$strSQL = sprintf(
+			"
+			UPDATE
+				`register-student`
+			SET
+				grade = '%s'
+			WHERE
+				subjectID = '%s' AND
+				studentID = '%s' AND
+				registerID = 
+				(
+				SELECT
+					registerID
+				FROM
+					`registerinfo`
+				WHERE
+					`term` = '%s' AND
+					`year` = '%s'
+				)
+			",
+			mysql_real_escape_string($grade),
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($studentID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery)
+		return true;
+	else
+		return false;
+}
 function getScore($scoreID,$studentID){
 	$strSQL = sprintf(
 			"
@@ -246,7 +279,50 @@ function getScore($scoreID,$studentID){
 	}
 	return $result;
 }
+function getGrade($studentID,$subjectID,$term,$year){
+	$strSQL = sprintf(
+			"
+				SELECT
+					grade
+				FROM
+					`register-student`
+				WHERE
+					studentID = '%s' AND
+					subjectID = '%s' AND
+					registerID =
+					(
+						SELECT
+							registerID
+						FROM
+							`registerinfo`
+						WHERE
+							term = '%s' AND
+							year = '%s'
+					)
+				",
+			mysql_real_escape_string($studentID),
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery){
+		$row = mysql_fetch_array($objQuery);
+		return $row['grade'];
+	} else return false;
+}
+function checked($v1,$v2){
+	if($v1==$v2) return ' checked'; else return '';
+}
+function selected($v1,$v2){
+	if($v1==$v2) return ' selected'; else return '';
+}
+function getAvgGrade($studentID,$term,$year){
+	return '--';
+}
+//----------------Start Condition
 if($action=="get"){
+//----------------Action = GET	
 	if($type=="atdList"){
 		if($atdID){
 			$strSQL = sprintf(
@@ -287,6 +363,7 @@ if($action=="get"){
 		echo json_encode($data);
 	} elseif($type=="stuScoList"){
 		$subjectID = $_REQUEST['subjectID'];
+		$scoreType = $_REQUEST['scoreType'];
 		$instructorID = $confUserID;
 		$term = getTerm();
 		$year = getYear();
@@ -294,14 +371,38 @@ if($action=="get"){
 		$objQuery = getStuRegList($subjectID, $instructorID, $year, $term);
 		if($objQuery&&mysql_num_rows($objQuery)>0){
 			while($row=mysql_fetch_array($objQuery)){
-				$data['data'][] = array(
-						'cardID'=>'<span style="display:none;">'.$row['cardID'].'</span>',
-						'secondCardID'=>'<span style="display:none;">'.$row['secondCardID'].'</span>',
-						'studentID'=>$row['studentID'],
-						'firstName'=>$row['firstName'],
-						'lastName'=>$row['lastName'],
-						'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" value="'.getScore($scoreID,$row['studentID']).'" />'
-				);
+				if($scoreType=='GRADE'){
+					$grade = getGrade($row['studentID'],$subjectID,$term,$year);
+					$select = '<select name="score" style="width: 80px;">';
+					$select.= '<option value="">--</option>';
+					$select.= '<option value="4"'.selected($grade, '4').'>4.0</option>';
+					$select.= '<option value="3.5"'.selected($grade, '3.5').'>3.5</option>';
+					$select.= '<option value="3"'.selected($grade, '3').'>3.0</option>';
+					$select.= '<option value="2.5"'.selected($grade, '2.5').'>2.5</option>';
+					$select.= '<option value="2"'.selected($grade, '2').'>2.0</option>';
+					$select.= '<option value="1.5"'.selected($grade, '1.5').'>1.5</option>';
+					$select.= '<option value="1"'.selected($grade, '1').'>1.0</option>';
+					$select.= '<option value="0"'.selected($grade, '0').'>0</option>';
+					$select.= '<option value="W"'.selected($grade, 'W').'>W</option>';
+					$select.= '</select>';
+					$data['data'][] = array(
+							'cardID'=>'<span style="display:none;">'.$row['cardID'].'</span>',
+							'secondCardID'=>'<span style="display:none;">'.$row['secondCardID'].'</span>',
+							'studentID'=>$row['studentID'],
+							'firstName'=>$row['firstName'],
+							'lastName'=>$row['lastName'],
+							'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'">'.$select
+					);
+				} else {
+					$data['data'][] = array(
+							'cardID'=>'<span style="display:none;">'.$row['cardID'].'</span>',
+							'secondCardID'=>'<span style="display:none;">'.$row['secondCardID'].'</span>',
+							'studentID'=>$row['studentID'],
+							'firstName'=>$row['firstName'],
+							'lastName'=>$row['lastName'],
+							'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" value="'.getScore($scoreID,$row['studentID']).'" />'
+					);
+				}
 			}
 		} else {
 			$data['data'][] = array(
@@ -372,7 +473,38 @@ if($action=="get"){
 		if($studentID){
 			echo getCardInfo($studentID);
 		}
-	} elseif($type=="subList"){
+	}elseif($type=="insStuList"){
+		$strSQL = sprintf(
+		"
+		SELECT
+			*
+		FROM
+			student
+		WHERE
+			instructorID = '%s'
+		",
+		mysql_real_escape_string($confUserID)
+	);
+		if($confUserType=='instructor'){
+			$objQuery = mysql_query($strSQL);
+			if($objQuery&&mysql_num_rows($objQuery)>0){
+				while($row=mysql_fetch_array($objQuery)){
+					$gendata[] = array(
+							'studentID' => $row['studentID'],
+							'firstName' => $row['firstName'],
+							'lastName' => $row['lastName'],
+							'cardID' => "<span style='display:none;'>".$row['cardID']."</span>",
+							'secondCardID' => "<span style='display:none;'>".$row['secondCardID']."</span>",
+							'atd' => "<button name='viewAtd' data-studentID='".$row['studentID']."'>ดูเวลาเรียน</button>",
+							'sco' => "<button name='viewSco' data-studentID='".$row['studentID']."'>ดูคะแนน</button>",
+							'grade' => getAvgGrade($row['studentID'], getTerm(), getYear())
+					);
+				}
+				$data['data'] = $gendata;
+				echo json_encode($data);
+			}
+		}
+	}elseif($type=="subList"){
 		$strSQL = 'SELECT * FROM `subject` WHERE 1';
 		$objQuery = mysql_query($strSQL);
 		if($objQuery){
@@ -458,7 +590,7 @@ if($action=="get"){
 	} elseif($type=='regSubList'){
 		$term = $_POST['term'];
 		$year = $_POST['year'];
-		$strSQL = 'SELECT * FROM `register-subject` regsub, `registerinfo` reg WHERE reg.registerID = regsub.registerID AND reg.term="'.$term.'" AND reg.year="'.$year.'";';
+		$strSQL = 'SELECT * FROM `register-subject` regsub, `registerinfo` reg, `subject` sub WHERE regsub.subjectID = sub.subjectID AND reg.registerID = regsub.registerID AND reg.term="'.$term.'" AND reg.year="'.$year.'";';
 		$objQuery = mysql_query($strSQL);
 		if(mysql_num_rows($objQuery)>=1){
 			while($row = mysql_fetch_array($objQuery)){
@@ -512,6 +644,229 @@ if($action=="get"){
 			$data['maxScore'] = $row['maxScore'];
 		} else {
 			$data = NULL;
+		}
+		echo json_encode($data);
+	} elseif($type=="stuReport"){
+		$report = $_REQUEST['report'];
+		$studentID = $_REQUEST['studentID'];
+		if($report=="atd"){
+			$strSQL = sprintf(
+			"
+			SELECT
+				regstu.subjectID,sub.name
+			FROM
+				`register-student` regstu,
+				`subject` sub
+			WHERE
+				regstu.subjectID = sub.subjectID AND
+				regstu.studentID = '%s' AND
+				regstu.registerID =
+				(
+					SELECT
+						registerID
+					FROM
+						`registerinfo`
+					WHERE
+						`term` = '%s' AND
+						`year` = '%s'
+				)
+			",
+				mysql_real_escape_string($studentID),
+				mysql_real_escape_string(getTerm()),
+				mysql_real_escape_string(getYear())
+			);
+			$objQuery = mysql_query($strSQL);
+			if($objQuery&&mysql_num_rows($objQuery)>0){
+				while($row=mysql_fetch_array($objQuery)){
+					$preData['subjectID'] = $row['subjectID'];
+					$preData['subjectName'] = $row['name'];
+					$strSQL = sprintf(
+						"
+						SELECT
+							attendanceID
+						FROM
+							`attendanceinfo`
+						WHERE
+							subjectID = '%s' AND
+							registerID =
+							(
+								SELECT
+									registerID
+								FROM
+									`registerinfo`
+								WHERE
+									`term` = '%s' AND
+									`year` = '%s'
+							)
+						",
+						mysql_real_escape_string($row['subjectID']),
+						mysql_real_escape_string(getTerm()),
+						mysql_real_escape_string(getYear())
+					);
+					$objQuery2 = mysql_query($strSQL);
+					if($objQuery2&&mysql_num_rows($objQuery2)>0){
+						$preData['total'] = mysql_num_rows($objQuery2);
+						$check = 0;
+						$late = 0;
+						while($row2=mysql_fetch_array($objQuery2)){
+							$strSQL = sprintf(
+									"
+									SELECT
+										status
+									FROM
+										`studentattendance`
+									WHERE
+										attendanceID = '%s' AND
+										subjectID = '%s' AND
+										studentID = '%s' AND
+										registerID =
+										(
+											SELECT
+												registerID
+											FROM
+												`registerinfo`
+											WHERE
+												`term` = '%s' AND
+												`year` = '%s'
+										)
+									",
+									mysql_real_escape_string($row2['attendanceID']),
+									mysql_real_escape_string($row['subjectID']),
+									mysql_real_escape_string($studentID),
+									mysql_real_escape_string(getTerm()),
+									mysql_real_escape_string(getYear())
+							);
+							$objQuery3 = mysql_query($strSQL);
+							if($objQuery3&&mysql_num_rows($objQuery3)>0){
+								while($row3=mysql_fetch_array($objQuery3)){
+									if($row3['status']=="ONTIME")
+										$check++;
+									elseif($row3['status']=="LATE")
+										$late++;
+								}
+							}
+						}
+						$preData['check'] = $check;
+						$preData['late'] = $late;
+						$preData['abs'] = ($preData['total']-($preData['check']+$preData['late']));
+						$preData['percent'] = @round(($preData['check']+$preData['late'])/$preData['total']*100,2).'%';
+						$data['data'][] = $preData;
+					} else {
+						$preData['check'] = '--';
+						$preData['late'] = '--';
+						$preData['abs'] = '--';
+						$preData['percent'] = '--';
+						$data['data'][] = $preData;
+					}
+				}
+			} else {
+				$data['data'] == NULL;
+			}
+		} elseif($report=="score"){
+			$strSQL = sprintf(
+					"
+			SELECT
+				regstu.subjectID,sub.name,regstu.grade
+			FROM
+				`register-student` regstu,
+				`subject` sub
+			WHERE
+				regstu.subjectID = sub.subjectID AND
+				regstu.studentID = '%s' AND
+				regstu.registerID =
+				(
+					SELECT
+						registerID
+					FROM
+						`registerinfo`
+					WHERE
+						`term` = '%s' AND
+						`year` = '%s'
+				)
+			",
+					mysql_real_escape_string($studentID),
+					mysql_real_escape_string(getTerm()),
+					mysql_real_escape_string(getYear())
+			);
+			$objQuery = mysql_query($strSQL);
+			if($objQuery&&mysql_num_rows($objQuery)>0){
+				while($row=mysql_fetch_array($objQuery)){
+					$preData['grade'] = $row['grade']?$row['grade']:'--';
+					$preData['subjectID'] = $row['subjectID'];
+					$preData['subjectName'] = $row['name'];
+					$strSQL = sprintf(
+							"
+						SELECT
+							scoreID,maxScore
+						FROM
+							`scoreinfo`
+						WHERE
+							subjectID = '%s' AND
+							registerID =
+							(
+								SELECT
+									registerID
+								FROM
+									`registerinfo`
+								WHERE
+									`term` = '%s' AND
+									`year` = '%s'
+							)
+						",
+							mysql_real_escape_string($row['subjectID']),
+							mysql_real_escape_string(getTerm()),
+							mysql_real_escape_string(getYear())
+					);
+					$objQuery2 = mysql_query($strSQL);
+					if($objQuery2&&mysql_num_rows($objQuery2)>0){
+						$maxScore = 0;
+						$sumScore = 0;
+						while($row2=mysql_fetch_array($objQuery2)){
+							$maxScore += $row2['maxScore'];
+							$strSQL = sprintf(
+									"
+									SELECT
+										score
+									FROM
+										`studentscore`
+									WHERE
+										scoreID = '%s' AND
+										subjectID = '%s' AND
+										studentID = '%s' AND
+										registerID =
+										(
+											SELECT
+												registerID
+											FROM
+												`registerinfo`
+											WHERE
+												`term` = '%s' AND
+												`year` = '%s'
+										)
+									",
+									mysql_real_escape_string($row2['scoreID']),
+									mysql_real_escape_string($row['subjectID']),
+									mysql_real_escape_string($studentID),
+									mysql_real_escape_string(getTerm()),
+									mysql_real_escape_string(getYear())
+							);
+							$objQuery3 = mysql_query($strSQL);
+							if($objQuery3&&mysql_num_rows($objQuery3)>0){
+								while($row3=mysql_fetch_array($objQuery3)){
+									$sumScore+=$row3['score'];
+								}
+							}
+						}
+						$preData['score'] = $sumScore.'/'.$maxScore;
+						$data['data'][] = $preData;
+					} else {
+						$preData['score'] = '--';
+						$data['data'][] = $preData;
+					}
+				}
+			} else {
+				$data['data'] == NULL;
+			}
 		}
 		echo json_encode($data);
 	}
@@ -707,12 +1062,20 @@ if($action=="get"){
 		$scoreID = $_REQUEST['scoreID'];
 		$score = json_decode($_REQUEST['score']);
 		$studentID = json_decode($_REQUEST['studentID']);
+		$scoreType = $_REQUEST['scoreType'];
+		$subjectID = $_REQUEST['subjectID'];
 		$result['sizeOf'] = sizeof($score);
 		for($i=0;$i<sizeof($score);$i++){
 			$result['data'][$studentID[$i]] = $score[$i];
 			if($score[$i]!=''){
-				if(!scoreSet($scoreID, $studentID[$i], $score[$i])){
-					$result['error'][$studentID[$i]] = TRUE;
+				if($scoreType == 'GRADE'){
+					if(!gradeSet($subjectID,getTerm(),getYear(), $studentID[$i], $score[$i])){
+						$result['error'][$studentID[$i]] = TRUE;
+					}
+				} else {
+					if(!scoreSet($scoreID, $studentID[$i], $score[$i])){
+						$result['error'][$studentID[$i]] = TRUE;
+					}
 				}
 			}
 		} 
@@ -725,6 +1088,11 @@ if($action=="get"){
 		$addStatus = $_REQUEST['addStatus'];
 		$date = date("Y-m-d H:i:s",time());
 		if($addStatus=='1'){
+			if($scoreType=='GRADE'){
+				$data['status'] = 'SUCCESS';
+				echo json_encode($data);
+				exit();
+			}
 			$strSQL = sprintf(
 				"
 				INSERT INTO

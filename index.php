@@ -438,6 +438,7 @@
 				<?php 		} else {?>
 				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
 				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
+				<a href="?action=insReport" class="icon-group-outline">นักเรียนในที่ปรึกษา</a>
 				<?php 		}?>
 				<a href="#" class="icon-pie-outline" id="menuReport">รายงาน</a>
 				<?php } else {?>
