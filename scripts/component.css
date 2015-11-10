@@ -180,6 +180,7 @@ html, body, .perspective {
 .icon-folder-add::before { content: "\e07b" }
 .icon-stopwatch::before { content: "\e10c" }
 .icon-attachment-outline::before { content: "\e026" }
+.icon-group-outline::before { content: "\e082" }
 
 /* Individual Effects */
 

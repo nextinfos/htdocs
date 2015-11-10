@@ -39,7 +39,11 @@
 <script>
 	function genScore(){
 		var score = new Array;
-		var obj = $( 'input[name=score]' );
+		if($('#scoreType').val()=='GRADE'){
+			var obj = $( 'select[name=score]' );
+		} else {
+			var obj = $( 'input[name=score]' );
+		}
 		for(var i =0; i<obj.length; i++){
 			score[i] = obj.eq(i).val();
 		}
@@ -84,7 +88,15 @@
 				});
 			}
 		});
-		$( "#scoreType" ).selectmenu();
+		$( "#scoreType" ).selectmenu({
+			change: function(){
+				if($(this).val()=='GRADE'){
+					$( '#scoreMaxHolder' ).hide('blind', 500);
+				} else {
+					$( '#scoreMaxHolder' ).show('blind', 500);
+				}
+			}
+			});
 		$( "#scoreInfoSelector" ).selectmenu();
 		$( "#subject" ).load("dataCenter.php", {
 			action: "get",
@@ -130,6 +142,7 @@
 						}
 					}
 				}).addClass('scoreSpinner');
+				$( 'select[name=score]' ).selectmenu();
 //				$( 'input[name=score]' ).attr('max',$( '#scoreMax' ).val());
 			}, 100);
 		}).DataTable( {
@@ -146,6 +159,7 @@
 					d.type = "stuScoList";
 					d.subjectID = $( "#subject" ).val();
 					d.scoreID = $( "#scoreInfoSelector" ).val();
+					d.scoreType = $( "#scoreType" ).val();
 				}
 			}
 		});
@@ -166,21 +180,26 @@
 							case "TASK":	var type = 'คะแนนชิ้นงาน'; break;
 							case "QUIZ":	var type = 'คะแนนตอบคำถาม'; break;
 							case "EXAM":	var type = 'คะแนนสอบ'; break;
+							case "GRADE":	var type = 'เกรด'; break;
 						}
 						if(data.status=='SUCCESS'){
-							$( "#scoreInfoSelector" ).load("dataCenter.php", {
-								action: "get",
-								type: "getScoreList",
-								subjectID:$( "#subject" ).val()
-							},function(){
-								$( "#scoreInfoSelector" ).val(data.scoreID);
-								$( "#scoreInfoSelector" ).selectmenu( "refresh" );
-							});
+							if($( '#scoreType' ).val()=='GRADE'){
+								$( '#infoScoreMaxHolder' ).hide('fade', 1);
+							} else {
+								$( "#scoreInfoSelector" ).load("dataCenter.php", {
+									action: "get",
+									type: "getScoreList",
+									subjectID:$( "#subject" ).val()
+								},function(){
+									$( "#scoreInfoSelector" ).val(data.scoreID);
+									$( "#scoreInfoSelector" ).selectmenu( "refresh" );
+								});
+								$( '#edit' ).show('fade', 500);
+								$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
+							}
 							studentListVar.ajax.reload();
 							$( '#infoSubName' ).html($( 'option[value='+$( '#subject' ).val()+']' ).html());
 							$( '#infoScoreType' ).html(type);
-							$( '#infoScoreMax' ).html($( '#scoreMax' ).val());
-							$( '#edit' ).show('fade', 500);
 							$( '#search, #cancel' ).hide('fade', 1);
 							$( '#scoreInfoConf' ).hide('blind', 500);
 							$( '.studentList' ).show('blind', 500);
@@ -222,6 +241,8 @@
 				action:'set',
 				type:'setScore',
 				scoreID:$( '#scoreInfoSelector' ).val(),
+				scoreType: $( '#scoreType' ).val(),
+				subjectID: $( '#subject' ).val(),
 				score:JSON.stringify(genScore()),
 				studentID:JSON.stringify(genStudentID())},
 				function(data){
@@ -277,10 +298,11 @@
 			  <option value="TASK">คะแนนชิ้นงาน</option>
 			  <option value="QUIZ">คะแนนตอบคำถาม</option>
 			  <option value="EXAM">คะแนนสอบ</option>
+			  <option value="GRADE">เกรด</option>
 			</select>
 		</div>
 		<div class="spacer"></div>
-		<div>
+		<div id="scoreMaxHolder">
 				<label>คะแนนเต็ม : </label><input name="scoreMax" id="scoreMax" style="width:50px;" value="10">
 		</div>
 		<div class="spacer"></div>
@@ -311,7 +333,7 @@
 			<legend style="margin-left:12px;">รายละเอียดการลงคะแนน</legend>
 			วิชา : <span id="infoSubName"></span><br/>
 			ประเภท : <span id="infoScoreType"></span><br/>
-			คะแนนเต็ม : <span id="infoScoreMax"></span> คะแนน
+			<span id="infoScoreMaxHolder">คะแนนเต็ม : <span id="infoScoreMax"></span> คะแนน</span>
 		</fieldset>
 		<fieldset class="studentListContainer">
 			<legend style="margin-left:12px;">รายชื่อนักเรียนที่ลงทะเบียน</legend>

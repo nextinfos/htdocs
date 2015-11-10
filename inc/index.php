@@ -28,7 +28,13 @@
 	 	});
 	});
 </script>
+<?php
+	if($confUserType=="instructor"){
+?>
 <div id="indexContainer">
 	<h2>ยินดีต้อนรับสู่ระบบจัดการ เวลาเรียนและคะแนน</h2>
 	คุณสามารถเข้าสู่เมนูหลักได้โดยการกดที่รูปโลโก้หรือชื่อโรงเรียน
 </div>
+<?php
+	} else require_once("inc/stuReport.php");
+?>
