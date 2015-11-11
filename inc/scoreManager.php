@@ -135,7 +135,10 @@
 								console.log($(this).val()+' > '+$( '#scoreMax' ).val()+' = ');
 								alert('คุณกรอกคะแนนเกินคะแนนเต็ม\nคะแนนเต็มสำหรับครั้งนี้คือ '+$( '#scoreMax' ).val()+' คะแนน\nคะแนนที่คุณกรอกมาคือ '+$(this).val()+' คะแนน');
 								$(this).val($( '#scoreMax' ).val());
-							}	
+							} else if(parseInt($(this).val())<0){
+								alert('คะแนนไม่สามารถมีค่าติดลบได้\nคะแนนที่คุณกรอกมาคือ '+$(this).val()+' คะแนน');
+								$(this).val('0');
+							}
 						} else {
 							alert('กรุณากรอกคะแนนเป็นตัวเลข');
 							$(this).val('0');
@@ -248,7 +251,7 @@
 				function(data){
 					data = $.parseJSON(data);
 					console.log(data);
-					alert(data.sizeOf);
+					alert('บันทึกคะแนนเรียบร้อย');
 			});
 		});
 		$( '#editScore' ).button().click(function(){

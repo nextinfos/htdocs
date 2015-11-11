@@ -678,6 +678,7 @@ if($action=="get"){
 			$objQuery = mysql_query($strSQL);
 			if($objQuery&&mysql_num_rows($objQuery)>0){
 				while($row=mysql_fetch_array($objQuery)){
+					$preData = NULL;
 					$preData['subjectID'] = $row['subjectID'];
 					$preData['subjectName'] = $row['name'];
 					$strSQL = sprintf(
@@ -755,6 +756,7 @@ if($action=="get"){
 						$preData['check'] = '--';
 						$preData['late'] = '--';
 						$preData['abs'] = '--';
+						$preData['total'] = '--';
 						$preData['percent'] = '--';
 						$data['data'][] = $preData;
 					}

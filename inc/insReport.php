@@ -125,7 +125,7 @@
 	  display: block;
 	  padding: 4px 0;
 	  border-radius: 50%;
-	  width: 50px;
+	  width: 23px;
 	  height: 23px;
 	  box-sizing: border-box;
 	  line-height: 1.2;
@@ -293,11 +293,17 @@
 		display: none;
 	}
 	.studentHolder {
-	padding-top: 20px;
+		padding-top: 20px;
 		width: 100%;
  		max-width: 1220px; /*730px=3,975px=4,1220px=5*/
 		min-width: 240px;
 		margin: auto;
+	}
+	.studentID {
+		background-color: #55F;
+		width: 50px;
+		top: 90px;
+		left: 30px;
 	}
 </style>
  <div style="text-align:center;">
@@ -335,7 +341,8 @@ if($confUserType=='instructor'){
 <div class="profile" data-studentID="<?php echo $row['studentID'];?>">
 	<div class="card-face__avatar">
 		<!-- Bullet notification -->
-		<span class="card-face__bullet"><?php echo $row['studentID'];?></span>
+<!-- 		<span class="card-face__bullet">--</span> -->
+		<span class="card-face__bullet studentID"><?php echo $row['studentID'];?></span>
 		<!-- User avatar -->
 		<img src="<?php echo $studentPhoto;?>" width="110" height="110" draggable="false"/>
 	</div>
