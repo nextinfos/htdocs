@@ -2,7 +2,8 @@
 	session_start();
 	date_default_timezone_set("Asia/Bangkok");
 	$noPhoto = 'images/noPhoto.jpg';
-	$objConnect = @mysql_connect("localhost","utccictc_tss","1d6QHmik");
+// 	$objConnect = @mysql_connect("localhost","utccictc_tss","1d6QHmik");
+	$objConnect = @mysql_connect("localhost","u554635491_asms","zS2?[?X/]c2G>qj7?0");
 // 	$objConnect = mysql_connect("localhost","root","");
 	if($objConnect){
 		$objDB = mysql_select_db("utccictc_tss");
