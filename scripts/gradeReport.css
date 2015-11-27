@@ -1,0 +1,143 @@
+@CHARSET "UTF-8";
+			body, html {
+				margin: 0px;
+				font-size: 1em;
+			}
+			#paper {
+				max-width: 21.0cm;
+				max-height: 29.7cm;
+				min-width: 21.0cm;
+				min-height: 29.7cm;
+ 				border: 1px solid black;
+ 				padding: 0.5cm 1cm;
+				margin: auto;
+			}
+			#header {
+				width: 100%;
+				height: 150px;
+			}
+			#logo {
+				width: 70px;
+				height: 70px;
+				margin: auto;
+				text-align: center;
+			}
+			#logo>img {
+				max-width: 70px;
+				max-height: 70px;
+			}
+			#schoolName,#title,#termInfo,#studentInfo {
+				text-align: center;
+				font-weight: bold;
+			}
+			#data, #data>table {
+				width: 100%;
+			}
+			table td, table th{
+				border-right: 1px solid black;
+				border-bottom: 1px solid black;
+				padding: 4px 5px;
+			}
+			table {
+				border-top: 1px solid black;
+				border-left: 1px solid black;
+				font-size: 0.8em;
+			}
+			th {
+				font-weight: normal;
+			}
+			.group {
+				text-weight: bold;
+			}
+			td.merge {
+				border-right: none;
+			}
+			#data>table>tbody>tr>td {
+				text-align: center;
+			}
+			td.lefttext {
+				text-align: left !important;
+			}
+			.subjectID{ width: 50px; }
+			.subjectName { min-width: 180px; }
+			.durningScore { width: 65px; }
+			.totalDurningScore { width: 76px; }
+			.midScore, .finalScore { width: 55px; }
+			.totalScore { width: 100px; }
+			.grade { width: 35px; }
+			.beg {
+				word-break: break-word;
+    			width: 20px;
+    		}
+    		.beg>input[type=text] {
+    			width: 100%;
+    			margin: 0px;
+    			padding: 0px;
+    			text-align: center;
+    		}
+    		td.beg {
+				padding: 4px 1px;
+			}
+    		#footer {
+    			width: 100%;
+    			vertical-align: middle;
+    		}
+    		#footer>div {
+    			display: inline-block;
+    			width: 49%;
+    			margin: auto;
+    		}
+     		#sum {
+				padding-top: 20px;
+				vertical-align: top;
+     		}
+    		#sum>table {
+    			width: 100%;
+    		}
+    		#sign {
+    			font-size: 0.8em;
+    			text-align: center;
+    		}
+    		.signSpace {
+    			padding-top: 30px;
+    		}
+    		#sign>div {
+    			text-align: center;
+    			width: 100%;
+    		}
+    		.signName {
+    			color: rgba(0,0,0,0);
+    		}
+    		#printOption {
+    			width: 21.0cm;
+    			text-align: center;
+    			padding: 20px;
+    			margin: auto;
+    		}
+    		@page {
+				size: A4;
+				margin: 0.5cm 1cm;
+			}
+			@media print {
+				.noprint {
+					display: none;
+				}
+				body {
+					font-size: 0.8em;
+				}
+				table {
+					font-size: 0.6em;
+				}
+				#paper {
+					border: none;
+					padding: 0cm 0cm;
+				}
+				.beg>input[type=text] {
+					border: none;
+					font-size: 0.6em;
+					width: 100%;
+				}
+				td.beg {
+					padding: 4px 1px;
+				}
+			}

@@ -47,6 +47,23 @@
 		);
 		$objQuery = mysql_query($strSQL);
 		$registerCount = $objQuery?mysql_num_rows($objQuery):'0';
+		$strSQL = sprintf(
+				"
+			SELECT
+				*
+			FROM
+				`instructor`
+			WHERE
+				`instructorID` = '%s'
+			LIMIT 1
+			",
+				mysql_real_escape_string($studentInfo['instructorID'])
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery){
+			$row = mysql_fetch_array($objQuery);
+			$insName = $row['firstName'].' '.$row['lastName'];
+		}
 ?>
 <style>
 	@import url(http://fonts.googleapis.com/css?family=Roboto:400,300);
@@ -551,6 +568,16 @@
 		background: rgba(255,255,255,0.3);
 		border: 0px;
 	}
+	.studentID {
+		background-color: #55F;
+		width: 50px;
+		top: 90px;
+		left: 30px;
+	}
+	.card-face__ins {
+		padding-top: 10px;
+		color: #999;
+	}
 </style>
 <script>
 $(function() {
@@ -624,10 +651,12 @@ $(function() {
 					data: "subjectName",
 					orderable: false
 				},
+<?php if($confUserType=='instructor'){?>
 				{
 					data: "score",
 					orderable: false
 				},
+<?php }?>
 				{
 					data: "grade",
 					orderable: false
@@ -647,10 +676,20 @@ $(function() {
 	$('fieldset').addClass("ui-corner-all");
 });
 function showAttendance(){
-	$( '#attendance' ).toggle('blind',500);
+	$( '#attendance' ).toggle('blind',1000);
+	if($( '#attendance' ).css('display')!='none'){
+		$('html,body,.mainContainer').animate({
+			scrollTop: $( '#attendance' ).offset().top
+		}, 1000, 'swing');
+	}
 }
 function showScore(){
-	$( '#score' ).toggle('blind',500);
+	$( '#score' ).toggle('blind',1000);
+	if($( '#score' ).css('display')!='none'){
+		$('html,body,.mainContainer').animate({
+			scrollTop: $( '#score' ).offset().top
+		}, 1000, 'swing');
+	}
 }
 </script>
 <div id="studentInfo">
@@ -676,7 +715,7 @@ function showScore(){
 			<!-- Avatar -->
 			<div class="card-face__avatar">
 				<!-- Bullet notification -->
-				<span class="card-face__bullet"><?php echo $studentID;?></span>
+				<span class="card-face__bullet studentID"><?php echo $studentID;?></span>
 				<!-- User avatar -->
 				<img src="<?php echo $studentPhoto;?>" width="110" height="110" draggable="false"/>
 			</div>
@@ -684,6 +723,7 @@ function showScore(){
 			<h2 class="card-face__name"><?php echo $studentInfo['firstName'].' '.$studentInfo['lastName']?></h2>
 			<!-- Title -->
 			<span class="card-face__title">ชั้น<?php echo getGradeYearName($studentInfo['gradeYear'])?></span>
+			<span class="card-face__ins">ครูที่ปรึกษา <?php echo $insName;?></span>
 			<div class="card-face-footer">
 				<?php if($confUserType=="instructor"){?>
 				<a href="?action=insReport" class="card-face__social" title="ย้อนกลับ">
@@ -729,7 +769,9 @@ function showScore(){
 				<tr>
 					<th>รหัสวิชา</th>
 					<th>วิชา</th>
+<?php if($confUserType=='instructor'){?>
 					<th>คะแนน</th>
+<?php }?>
 					<th>เกรด</th>
 				</tr>
 			</thead>

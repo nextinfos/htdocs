@@ -354,6 +354,9 @@
  	 			$( '#logoImage, #logoText' ).click(function(){
  	 	 			$( '#logo' ).click();
  	 			});
+ 	 			$( '#exit' ).click(function(){
+ 	 	 			window.close();
+ 	 			});
  	 			buttonsModel = new Array();
  	 			buttonsModel.push({ text: "เพิ่มวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=add'; } , cssIcon: "fa icon-plus", cssLabel: "", cssItem: "itemRadial" });
  	 			buttonsModel.push({ text: "แก้ไขวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=edit'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
@@ -434,7 +437,7 @@
 				<a href="#" class="icon-book" id="menuSubject">จัดการรายวิชา</a>
 				<a href="?action=subjectManager&tag=studentRegistrar" class="icon-persons">ลงทะเบียนนร.</a>
 				<a href="?action=studentManager&tag=add" class="icon-personadd">เพิ่มข้อมูลนร.</a>
-				<a href="#" class="icon-personadd">เพิ่มข้อมูลครู</a>
+				<a href="?action=instructorManager&tag=add" class="icon-personadd">เพิ่มข้อมูลครู</a>
 				<?php 		} else {?>
 				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
 				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
@@ -442,11 +445,12 @@
 				<a href="?action=insReport" class="icon-group-outline">นักเรียนในที่ปรึกษา</a>
 				<?php 		}?>
 				<a href="#" class="icon-pie-outline" id="menuReport">รายงาน</a>
-				<?php } else {?>
+				<?php } else {/*?>
 				<a href="#" class="icon-star">Favorites</a>
 				<a href="#" class="icon-mail">Messages</a>
-				<?php }?>
+				<?php */}?>
 				<?php if($confUserID) echo '<a href="#" id="logout" class="icon-lock">ออกจากระบบ</a>';?>
+<!-- 				<a href="#" id="exit" class="icon-book">ออกจากโปรแกรม</a> -->
 			</nav>
  		</div>
  		<script src="scripts/classie.js"></script>

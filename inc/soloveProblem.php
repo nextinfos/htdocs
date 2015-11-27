@@ -1,5 +1,13 @@
 <?php
+	$tag = $_REQUEST['tag'];
+	switch ($tag){
+		case 'popupBlock':
 ?>
+<script>
+	$(function(){
+		$( 'input[type=text]' ).click(function(){this.select();});
+	});
+</script>
 <div style="text-align: center;height: 1000px;">
 <h2>แก้ปัญหาหน้าต่างไม่ขึ้นเมื่อกด "เริ่มการลงเวลาใหม่"</h2>
 <img src="images/popupBlock-00.jpg"><br>
@@ -13,3 +21,7 @@
 <br>
 ทดลองกด "เริ่มการลงเวลาใหม่" อีกครั้ง
 </div>
+<?php
+		break; 
+	}
+?>
