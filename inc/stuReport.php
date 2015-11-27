@@ -535,9 +535,21 @@
 	}
 	#attendance, #score {
  		display: none; 
+ 		text-align: center;
+ 		padding-bottom: 20px;
 	}
 	#attendance td, #score td {
 		text-align: center;
+	}
+	h3 {
+		margin: 0px;
+	}
+	fieldset {
+		padding: 0px;
+		margin: 20px;
+		padding-bottom: 40px;
+		background: rgba(255,255,255,0.3);
+		border: 0px;
 	}
 </style>
 <script>
@@ -632,6 +644,7 @@ $(function() {
 				}
 			}
 	});
+	$('fieldset').addClass("ui-corner-all");
 });
 function showAttendance(){
 	$( '#attendance' ).toggle('blind',500);
@@ -691,31 +704,37 @@ function showScore(){
 	</div>
 </div>
 <div class="report" id="attendance">
-	<table class="display" id="reportAttendance">
-		<thead>
-			<tr>
-				<th>รหัสวิชา</th>
-				<th>วิชา</th>
-				<th>มา</th>
-				<th>สาย</th>
-				<th>ขาด</th>
-				<th>รวม</th>
-				<th>%</th>
-			</tr>
-		</thead>
-	</table>
+	<fieldset>
+		<legend style="margin-left:12px;">รายงานเวลาเรียน</legend>
+		<table class="display" id="reportAttendance">
+			<thead>
+				<tr>
+					<th>รหัสวิชา</th>
+					<th>วิชา</th>
+					<th>มา</th>
+					<th>สาย</th>
+					<th>ขาด</th>
+					<th>รวม</th>
+					<th>%</th>
+				</tr>
+			</thead>
+		</table>
+	</fieldset>
 </div>
 <div class="report" id="score">
-	<table class="display" id="reportScore">
-		<thead>
-			<tr>
-				<th>รหัสวิชา</th>
-				<th>วิชา</th>
-				<th>คะแนน</th>
-				<th>เกรด</th>
-			</tr>
-		</thead>
-	</table>
+	<fieldset>
+		<legend style="margin-left:12px;">รายงานคะแนน</legend>
+		<table class="display" id="reportScore">
+			<thead>
+				<tr>
+					<th>รหัสวิชา</th>
+					<th>วิชา</th>
+					<th>คะแนน</th>
+					<th>เกรด</th>
+				</tr>
+			</thead>
+		</table>
+	</fieldset>
 </div>
 <?php
 	} else {
