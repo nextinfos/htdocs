@@ -72,6 +72,68 @@ function getStdFromCard($cardID){
 	}
 	return $studentID;
 }
+function isStuReg($studentID,$subjectID,$term,$year){
+	$strSQL = sprintf(
+			"
+		SELECT
+			regstu.studentID
+		FROM
+			`register-student` regstu
+		WHERE
+			regstu.studentID = '%s'  AND
+			regstu.subjectID = '%s' AND
+			regstu.registerID = (
+					SELECT
+						registerID
+					FROM
+						`registerinfo`
+					WHERE
+						`term` = '%s' AND
+						`year` = '%s'
+				)
+		LIMIT 1
+		",
+			mysql_real_escape_string($studentID),
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery&&mysql_num_rows($objQuery)==1){
+		$row = true;
+	} else {
+		$row = false;
+	}
+	return $row;
+}
+function regStudent($studentID,$subjectID,$term,$year){
+	$strSQL = sprintf(
+			"
+			INSERT INTO
+				`register-student`
+				(studentID,subjectID,registerID,grade)
+				(
+					SELECT
+						'%s','%s',registerID,NULL
+					FROM
+						`registerinfo`
+					WHERE
+						term = '%s' AND
+						year = '%s'
+				)		
+			",
+			mysql_real_escape_string($studentID),
+			mysql_real_escape_string($subjectID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery)
+		return true;
+	else{
+		return $strSQL;
+	}
+}
 function isStdRegis($studentID,$atdID){
 	$strSQL = sprintf(
 		"
@@ -859,7 +921,9 @@ if($action=="get"){
 								}
 							}
 						}
-						$preData['score'] = $sumScore.'/'.$maxScore;
+						if($confUserType=='instructor'){
+							$preData['score'] = $sumScore.'/'.$maxScore;
+						}
 						$data['data'][] = $preData;
 					} else {
 						$preData['score'] = '--';
@@ -869,6 +933,123 @@ if($action=="get"){
 			} else {
 				$data['data'] == NULL;
 			}
+		}
+		echo json_encode($data);
+	} elseif($type=="regGradeYearList"){
+		$term = $_REQUEST['term'];
+		$year = $_REQUEST['year'];
+		$strSQL = sprintf(
+				"
+				SELECT
+					regsub.gradeYear
+				FROM
+					`register-subject` regsub
+					INNER JOIN
+					`subject` sub
+					ON
+					regsub.subjectID = sub.subjectID
+				WHERE
+					registerID = (
+						SELECT
+							registerID
+						FROM
+							`registerinfo`
+						WHERE
+							term = '%s' AND
+							year = '%s'
+					)
+				GROUP BY
+					regsub.gradeYear
+				ORDER BY
+					regsub.gradeYear ASC
+				",
+				mysql_real_escape_string($term),
+				mysql_real_escape_string($year)
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery&&mysql_num_rows($objQuery)>0){
+			while($row = mysql_fetch_array($objQuery)){
+				$result.= '<option value="'.$row['gradeYear'].'">'.getGradeYearName($row['gradeYear']).'</option>';
+			}
+		} else {
+			$result = '<option value="0">ไม่พบชั้นปี</optino>';
+		}
+		echo $result;
+	} elseif($type=="stuCanRegPackage"){
+		$term = $_REQUEST['term'];
+		$year = $_REQUEST['year'];
+		$gradeYear = $_REQUEST['gradeYear'];
+		$strSQL = sprintf(
+				"
+				SELECT
+					sub.subjectID,
+					sub.name
+				FROM
+					`register-subject` regsub,
+					`subject` sub
+				WHERE
+					regsub.subjectID = sub.subjectID AND
+					regsub.gradeYear = '%s' AND
+					regsub.registerID = 
+					(
+						SELECT
+							registerID
+						FROM
+							`registerinfo`
+						WHERE
+							term = '%s' AND
+							year = '%s'
+					)
+				",
+				mysql_real_escape_string($gradeYear),
+				mysql_real_escape_string($term),
+				mysql_real_escape_string($year)
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery&&mysql_num_rows($objQuery)>0){
+			while($row=mysql_fetch_assoc($objQuery)){
+				$predata = NULL;
+				$predata['subjectID'] = $row['subjectID'];
+				$predata['name'] = $row['name'];
+				$data['subject'][] = $predata;
+// 				$data['subject'][$row['subjectID']] = $row['name'];
+			}
+		}
+		$strSQL = sprintf(
+				"
+				SELECT
+					stu.studentID,
+					stu.firstName,
+					stu.lastName,
+					stu.gradeYear
+				FROM
+					`student` stu
+				WHERE
+					gradeYear = '%s'
+				",
+				mysql_real_escape_string($gradeYear)
+		);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery&&mysql_num_rows($objQuery)>0){
+			while($row = mysql_fetch_array($objQuery)){
+				$predata = NULL;
+				$predata['studentID'] = $row['studentID'];
+				$predata['firstName'] = $row['firstName'];
+				$predata['lastName'] = $row['lastName'];
+				$predata['gradeYear'] = getGradeYearName($row['gradeYear']);
+				$data['data'][] = $predata;
+				foreach ($data['subject'] as $mval){
+					foreach ($mval as $key=>$val){
+						if($key=='subjectID'){
+							$predata = NULL;
+							$data['isStuReg'][$row['studentID']][$val] = isStuReg($row['studentID'], $val, $term, $year);
+	 					}
+					}
+				}
+			}
+		} else {
+			$data['data'] = '';
+			$data['srtSQL'] = $strSQL;
 		}
 		echo json_encode($data);
 	}
@@ -1044,6 +1225,29 @@ if($action=="get"){
 			$data['studentID'] = $studentID;
 		}
 		echo json_encode($data);
+	} elseif($type=='addInstructor'){
+		$instructorID = $_POST['instructorID'];
+		$firstName = $_POST['firstName'];
+		$lastName = $_POST['lastName'];
+		$password = randomPassword(6);
+		$strSQL = "SELECT * FROM `instructor` WHERE instructorID='$instructorID';";
+		$objQuery = mysql_query($strSQL);
+		if(mysql_num_rows($objQuery)<1){
+			$strSQL = "INSERT INTO `instructor` VALUES ('$instructorID','$firstName','$lastName','$password',0);";
+			$objQuery = mysql_query($strSQL);
+			if($objQuery){
+				$data['status'] = 'OK';
+				$data['instructorID'] = $instructorID;
+				$data['password'] = $password;
+			} else {
+				$data['status'] = 'ERROR';
+				$data['strSQL'] = $strSQL;
+			}
+		} else {
+			$data['status'] = 'EXIST';
+			$data['studentID'] = $studentID;
+		}
+		echo json_encode($data);
 	} elseif($type=='regStudent'){
 		$term = $_POST['term'];
 		$year = $_POST['year'];
@@ -1149,6 +1353,46 @@ if($action=="get"){
 			$data['status']='FAIL';
 		}
 		echo json_encode($data);
+	} elseif($type=='regStudentPackage'){
+		$term = $_REQUEST['term'];
+		$year = $_REQUEST['year'];
+		$studentID = json_decode($_REQUEST['studentID']);
+		$data = $_REQUEST['data'];
+		if($term&&$year&&$studentID&&$data){
+			$error = false;
+			foreach ($data as $key => $val){
+				$objSubject = json_decode($val);
+				$subjectID = $objSubject->subjectID;
+				$objData = $objSubject->data;
+				foreach ($objData as $dkey => $dval){
+					if($dval){
+						if(!isStuReg($studentID[$dkey], $subjectID, $term, $year)){
+							$res=regStudent($studentID[$dkey], $subjectID, $term, $year);
+							if($res===true){
+								$success[$subjectID][] = $studentID[$dkey];
+							} else {
+								$error = true;
+								$fail[$subjectID][] = $studentID[$dkey];
+								$fail[$subjectID][$studentID[$dkey]][] = $res;
+							}
+						}
+					}
+				}
+			}
+			$result['success'] = $success;
+			$result['fail'] = $fail;
+			if($error==false){
+				$result['status'] = 'SUCCESS';
+			} else {
+				if(sizeof($success)>0)
+					$result['status'] = 'OK';
+				else 
+					$result['status'] = 'ERROR';
+			}
+		} else {
+			$result['status'] = 'UNVALID';
+		}
+ 		echo json_encode($result);
 	}
 } else {
 ?>

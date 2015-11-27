@@ -353,6 +353,9 @@ function getRegSubList(){
 				getRegSubList();
 			});
 		getRegSubList();
+		$( "input:button" ).button().click(function(event, ui){
+			window.location = "?action=subjectManager&tag=studentRegistrarPackage";
+		});
 		$( "button","#searchRegSub" ).button({
 			icons: {
 				primary: "ui-icon-search"
@@ -415,6 +418,8 @@ function getRegSubList(){
 <?php if($result) if($error) echo '<span class="error">'.$result.'</span>'; else echo '<span class="pass">'.$result.'</span>';?>
 	<form method="POST" id="studentRegistrar">
 	<div id="formHolder">
+		<div><input type="button" value="ลงทะเบียนแพกเกจ"></div>
+		<div class="spacer"></div>
 		<div class="leftCell">ภาคการศึกษา : </div>
 		<div id="term"><input type="radio" name="term" id="t1" value="1"<?php echo radioTerm(1);?>/><label for="t1">1</label><input type="radio" name="term" id="t2" value="2"/><label for="t2">2</label><input type="radio" name="term" id="t3" value="3"/><label for="t3">3</label></div>
 		<div class="spacer"></div>
@@ -455,6 +460,319 @@ function getRegSubList(){
 	<div class="spacer"></div>
 	<div style="margin: auto;"><input type="submit" name="submit" value="บันทึก" /></div>
 	</form>
+<?php
+	} elseif($tag=="studentRegistrarPackage"){
+?>
+<script>
+	function getGradeYearList(){
+		$( "#gradeYear" ).load( "dataCenter.php", { 
+			"action": "get", 
+			"type":"regGradeYearList", 
+			"term":$( "input[type='radio']:checked","#term" ).val(), 
+			"year":$( "#year" ).val() 
+		} , function( response, status, xhr ) {
+			$( "#gradeYear" ).selectmenu( "refresh" );
+		});
+	}
+	function genDataCheck(obj){
+		var data = new Array;
+		var obj = $( 'input[name='+obj+']' );
+		var objl = obj.length;
+		for(var i =0; i<objl; i++){
+			data[i] = obj.eq(i).is(":checked");
+		}
+		return data;
+	}
+	function genStudentID(){
+		var studentID = new Array;
+		var obj = $( 'input[name=studentID]' );
+		for(var i =0; i<obj.length; i++){
+			studentID[i] = obj.eq(i).val();
+		}
+		return studentID;
+	}
+	var subjectReg = new Array;
+	$(function(){
+// 		studentListVar = $('#studentList').DataTable( {
+// 			paging: false,
+// 		    scrollY: 370,
+// //		    "order": [0,'asc'],
+// //			    "orderFixed": [2,'desc'],
+// 		    "columns": [{ data: "studentID","orderable": true },{ data: "firstName","orderable": true },{ data: "lastName","orderable": true },{ data: "gradeYear","orderable": false}],
+// 		    ajax:  {
+// 	            url: "dataCenter.php",
+// 	            type: 'POST',
+// 	            data: function ( d ) {
+// 	                d.action = "get";
+// 	                d.type = "stuCanRegPackage";
+// 	                d.term = $( "input[type='radio']:checked","#term" ).val();
+// 	                d.year = $( "#year" ).val();
+// 	                d.gradeYear = $( "#gradeYear" ).val();
+// 	            }
+// 	        }
+// 		});
+		var term = $( "input[type='radio']:checked","#term" ).val();
+		var year = $('#year').val();
+		var subjectID = $( "#subject" ).val();
+		$( "#gradeYear" ).selectmenu();
+		$( "#term" ).buttonset();
+		$( "#year" ).selectmenu({
+			change: function( event, ui ) {
+				getGradeYearList();
+			}
+		});
+		$( "input[type='radio']","#term" )
+			.click(function(){
+				getGradeYearList();
+			});
+		getGradeYearList();
+		$( "button","#searchRegSub" ).button({
+			icons: {
+				primary: "ui-icon-search"
+			}
+		}).click(function( event, ui){
+			event.preventDefault();
+			getGradeYearList();
+			if($('#gradeYear').val()!=0){
+				//studentListVar.ajax.reload();
+				$.post('dataCenter.php',{
+					action: 'get',
+					type: 'stuCanRegPackage',
+					term: $( "input[type='radio']:checked","#term" ).val(),
+	                year: $( "#year" ).val(),
+	                gradeYear: $( "#gradeYear" ).val()
+				},function(data){
+					subjectReg = new Array;
+					data = JSON.parse(data);
+					var render;
+					render = render+'<thead class="ui-state-default"><tr><th style="width:50px;">รหัส</th><th style="min-width:100px;">ชื่อจริง</th><th style="min-width:100px;">นามสกุล<div class="checkAllSub">Check All : <input type="checkbox" id="checkall" checked></div></th>';
+					$.each(data.subject,function(mkey,mval){
+						var curSubjectID = null;
+						$.each(mval,function(key,val){
+							if(key=='subjectID'){
+								subjectReg[subjectReg.length] = val;
+								curSubjectID = val;
+							}
+							if(key=='name') render = render+'<th class="subjectName"><div class="subjectName"><input type="checkbox" name="checkAll" data-subjectID="'+curSubjectID+'" checked>'+val+'</div></th>';
+						});
+					});
+					render = render+'</tr></thead><tbody>';
+					var oi =0;
+					$.each(data.data,function(mkey,mval){
+						if(oi%2==0){ var trcl = 'odd'; }else{ var trcl = 'even';}
+						oi++;
+						render = render+'<tr class="'+trcl+'">';
+						render = render+'<td><input type="hidden" name="studentID" value="'+mval.studentID+'">'+mval.studentID+'</td>'+'<td>'+mval.firstName+'</td>'+'<td>'+mval.lastName+'</td>';
+						$.each(data.subject,function(skey,sval){
+							$.each(sval,function(key,val){
+								if(key=='subjectID'){
+									$.each(data.isStuReg,function(ikey,ival){
+										if(ikey==mval.studentID){
+											$.each(ival,function(iskey,isval){
+												if(iskey==val){
+// 													console.log(isval);
+													if(isval){
+					 									render = render+'<td><input type="checkbox" class="dis" name="'+iskey+'" disabled/></td>';
+					 								} else {
+					 									render = render+'<td><input type="checkbox" name="'+iskey+'" checked/></td>';
+													}
+												}
+											});
+										}
+									});
+								}
+							});
+						});
+						render = render+'</tr>';
+					});
+					render = render+'</tbody>';
+					$('#studentList').html(render);
+					$( 'input[name=checkAll' ).change(function(){
+// 						console.log($(this).attr("data-subjectid"));
+						$('input[name='+$(this).attr("data-subjectid")+']:not([disabled])').prop("checked",$(this).is(':checked'));
+						if(!$(this).is(':checked')) $( '#checkall' ).prop("checked",false);
+// 						console.log($('input[name='+$(this).attr("data-subjectid")+']:not([disabled])'));
+					});
+					$( '#checkall' ).change(function(){
+// 						$('input[name=checkAll]').prop("checked",$(this).is(':checked'));
+						$('input:not([disabled]):not([name=term])').prop("checked",$(this).is(':checked'));
+					});
+					$( 'input[type=checkbox]').change(function(){
+// 						console.log($('input[data-subjectid='+$(this).attr("name")+']'));
+// 						if(!$(this).is(':checked')) $( '#checkall' ).prop("checked",false);
+						if($('input[data-subjectid='+$(this).attr("name")+']')){
+							if ($('input[name='+$(this).attr("name")+']:checked').length == $('input[name='+$(this).attr("name")+']:not([disabled])').length)
+								$('input[data-subjectid='+$(this).attr("name")+']').prop("checked",true);
+							else
+								$('input[data-subjectid='+$(this).attr("name")+']').prop("checked",false);
+						}
+						if ($('input[name=checkAll]:checked').length == $('input[name=checkAll]').length) 
+							$( '#checkall' ).prop("checked",true);
+						else
+							$( '#checkall' ).prop("checked",false);
+					});
+				});
+				$('.studentListContainer').show("blind", 500);
+				$('input[name=submit]').show("fade", 500);
+				$('html,body,.mainContainer').animate({
+			          scrollTop: $( '#studentList').offset().top
+		        }, 1000, 'swing');
+			} else {
+				alert('กรุณาเลือกชั้นปี');
+			}
+		});
+		$( '#studentRegistrar' ).submit(function(event){
+			event.preventDefault();
+			if($( "input[type='radio']:checked","#term" ).val()&&$('#year').val()&&$('#subject').val()!=0&&$( 'input[type=checkbox]:not([name=checkAll]):not([id=checkall]):checked' ).size()>0){
+				if($('table#studentList>tbody>tr').size()>0){
+					var sendData=new Array;
+					$.each(subjectReg,function(key,val){
+						console.log(val);
+						var preData = new Array;
+// 						sendData[eval("'val'")] = genDataCheck(val);
+// 						preData['subjectID'] = val; 
+// 						preData['data'] = JSON.stringify(genDataCheck(val));
+// 						preData['data'] = genDataCheck(val);
+						sendData[key] = '{"subjectID":"'+val+'","data":'+JSON.stringify(genDataCheck(val))+'}';
+						console.log(sendData[key]);
+					});
+// 					var rsendData = JSON.stringify(sendData);
+					console.log(JSON.stringify(sendData));
+					$('#loading' ).show('fade', '', '100');
+					$.post( "dataCenter.php", {
+						'action': "set",
+						'type': "regStudentPackage",
+						'term': $( "input[type='radio']:checked","#term" ).val(),
+						'year': $('#year').val(),
+						'studentID': JSON.stringify(genStudentID()),
+						'data': sendData
+					}, function(data){
+						data = $.parseJSON(data);
+						var text;
+						if(data.status=='SUCCESS'){
+							text = 'ลงทะเบียนนักเรียนเข้าสู่รายวิชาเรียบร้อยแล้ว';
+							$('.studentListContainer').hide("blind", 500);
+							$('input[name=submit]').hide("fade", 500);
+						} else if(data.status=='UNVALID'){
+							text = 'กรุณาเลือก ภาคการศึกษา, ปีการศึกษา และ วิชา ให้ครบถ้วน';
+						} else if(data.status=='OK'){
+							text = 'มีนักเรียนบางคนไม่สามารถลงทะเบียนได้ กรุณาติดต่อผู้พัฒนา\n['+data.fail+']';
+						} else if(data.status=='ERROR'){
+							text = 'ข้อผิดพลาด : ไม่สามารถบันทึกข้อมูลได้ กรุณาติดต่อผู้พัฒนา';
+						} else {
+							text = 'ข้อผิดพลาด : ไม่ทราบปัญหา\n['+data+']';
+						}
+						setTimeout(function(){
+							alert(text);
+							$('#loading' ).hide('fade', '', '1000');
+						},800);
+					});
+				} else {
+					alert('ไม่พบรายชื่อนักเรียนที่ตรงกับเงื่อนไขวิชา');
+				}
+			} else {
+				if($( 'input[type=checkbox]:not([name=checkAll]):not([id=checkall]):checked' ).size()>0){
+					alert('กรุณาเลือกภาคการศึกษา, ปีการศึกษา และ ชั้นปี');
+				} else {
+					alert('ไม่มีข้อมูลให้บันทึก');
+				}
+			}
+		});
+		$('fieldset').addClass("ui-corner-all");
+		$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
+	});
+</script>
+<style>
+	#gradeYear {
+	  	width: 320px;
+	  }
+	  .studentListContainer, input[name=submit] {
+	  	display: none;
+	  }
+	th {
+		text-align: center;
+	}
+	th.subjectName {
+		padding-top: 150px !important;
+		width: 18px;
+	}
+	div.subjectName {
+		font-size: 0.7em;
+		 -webkit-transform: rotate(-90deg);
+	 	width: 150px;
+	 	height: 0px;
+	 	margin: -75px;
+	 	position: relative;
+	 	text-align: left;
+	}
+	div.subjectName>input[type=checkbox] {
+		 -webkit-transform: rotate(90deg);
+	     margin-left: -5px;
+	    margin-right: 5px;
+	    margin-bottom: -2.5px;
+	    margin-top: 2.5px;
+	}
+	input[type=checkbox].dis:hover {
+		cursor: not-allowed;
+	}
+	div.studentListContainer {
+		max-width: 850px;
+		margin: auto;
+	}
+	div.checkAllSub {
+	    font-size: 0.7em;
+	    position: relative;
+	    height: 0px;
+	    margin-top: 53px;
+	    margin-bottom: -53px;
+	    width: 100%;
+	    text-align: right;
+	}
+</style>
+<h1>ลงทะเบียนนักเรียนเข้าวิชาเรียน</h1>
+<?php if($result) if($error) echo '<span class="error">'.$result.'</span>'; else echo '<span class="pass">'.$result.'</span>';?>
+<form method="POST" id="studentRegistrar">
+	<div id="formHolder">
+		<div class="leftCell">ภาคการศึกษา : </div>
+		<div id="term"><input type="radio" name="term" id="t1" value="1"<?php echo radioTerm(1);?>/><label for="t1">1</label><input type="radio" name="term" id="t2" value="2"/><label for="t2">2</label><input type="radio" name="term" id="t3" value="3"/><label for="t3">3</label></div>
+		<div class="spacer"></div>
+		<div class="leftCell">ปีการศึกษา : </div>
+		<div>
+			<select name="year" id="year">
+				<?php $year = date("Y"); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
+			</select>
+		</div>
+		<div class="spacer"></div>
+		<div class="leftCell">ชั้นปี :</div> 
+		<div>
+			<select name="gradeYear" id="gradeYear">
+				<option value="0">กรุณาเลือกภาคการศึกษาและปีการศึกษา</option>
+			</select>
+		</div>
+		<div class="spacer"></div>
+	</div>
+	<div id="searchRegSub" style="margin: auto;"><button>ค้นหา</button></div>
+	<div class="spacer"></div>
+	<div class="studentListContainer">
+		<fieldset class="studentListContainer">
+  			<legend style="margin-left:12px;">รายชื่อวิชาในระบบ</legend>
+  			<div>
+	 			<table id="studentList" class="dataTable display" style="width:100%">
+	 				<thead>
+						<tr class="ui-state-default">
+							<th style="width: 100px;">รหัสนักเรียน</th>
+							<th>ชื่อ</th>
+							<th>นามสกุล</th>
+							<th style="width: 120px;">ระดับชั้น</th>
+						</tr>
+	 				</thead>
+	 			</table>
+ 			</div>
+		</fieldset>
+	</div>
+	<div class="spacer"></div>
+	<div style="margin: auto;"><input type="submit" name="submit" value="บันทึก" /></div>
+</form>
 <?php
 	} else {
 		echo "<script>window.location='?';</script>";

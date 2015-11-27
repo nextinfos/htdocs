@@ -1,0 +1,264 @@
+
+<!-- saved from url=(0045)http://localhost/preview.php?type=gradeReport -->
+<html pmbx_context="196E99DA-6B4F-475B-817B-A6438075BBCD"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>ระบบจัดการเวลาเรียนและคะแนน - ดูตัวอย่าง</title>
+		<style>
+			@font-face {
+			    font-family: THSarabunNew;
+			    src: url('fonts/THSarabunNew Bold.ttf');
+			}
+			body, html {
+				margin: 0px;
+				font-size: 1em;
+			}
+			#paper {
+				max-width: 21.0cm;
+				max-height: 29.7cm;
+				min-width: 21.0cm;
+				min-height: 29.7cm;
+ 				border: 1px solid black;
+ 				padding: 0.5cm 1cm;
+				margin: auto;
+			}
+			#header {
+				width: 100%;
+				height: 150px;
+			}
+			#logo {
+				width: 70px;
+				height: 70px;
+				margin: auto;
+				text-align: center;
+			}
+			#logo>img {
+				max-width: 70px;
+				max-height: 70px;
+			}
+			#schoolName,#title,#termInfo,#studentInfo {
+				text-align: center;
+				font-weight: bold;
+			}
+			#data, #data>table {
+				width: 100%;
+			}
+			table td, table th{
+				border-right: 1px solid black;
+				border-bottom: 1px solid black;
+				padding: 4px 5px;
+			}
+			table {
+				border-top: 1px solid black;
+				border-left: 1px solid black;
+				font-size: 0.8em;
+			}
+			th {
+				font-weight: normal;
+			}
+			.group {
+				text-weight: bold;
+			}
+			td.merge {
+				border-right: none;
+			}
+			#data>table>tbody>tr>td {
+				text-align: center;
+			}
+			td.lefttext {
+				text-align: left !important;
+			}
+			.subjectID{ width: 50px; }
+			.subjectName { width: 180px; }
+			.durningScore { width: 65px; }
+			.midScore, .totalDurningScore { width: 76px; }
+			.finalScore { width: 55px; }
+			.grade { width: 35px; }
+			.beg {
+				word-break: break-word;
+    			width: 20px;
+    		}
+    		.beg>input[type=text] {
+    			width: 100%;
+    			margin: 0px;
+    			padding: 0px;
+    			text-align: center;
+    		}
+    		td.beg {
+				padding: 4px 1px;
+			}
+    		#footer {
+    			width: 100%;
+    			vertical-align: middle;
+    		}
+    		#footer>div {
+    			display: inline-block;
+    			width: 49%;
+    			margin: auto;
+    		}
+     		#sum {
+				padding-top: 20px;
+				vertical-align: top;
+     		}
+    		#sum>table {
+    			width: 100%;
+    		}
+    		#sign {
+    			font-size: 0.8em;
+    			text-align: center;
+    		}
+    		.signSpace {
+    			padding-top: 30px;
+    		}
+    		#sign>div {
+    			text-align: center;
+    			width: 100%;
+    		}
+    		#printOption {
+    			width: 21.0cm;
+    			text-align: center;
+    			padding: 20px;
+    			margin: auto;
+    		}
+    		@page {
+				size: A4;
+				margin: 0.5cm 1cm;
+			}
+			@media print {
+				.noprint {
+					display: none;
+				}
+				body {
+					font-size: 0.8em;
+				}
+				table {
+					font-size: 0.6em;
+				}
+				#paper {
+					border: none;
+					padding: 0cm 0cm;
+				}
+				.beg>input[type=text] {
+					border: none;
+					font-size: 0.6em;
+					width: 100%;
+				}
+				td.beg {
+					padding: 4px 1px;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<div id="paper">
+			<div id="header">
+				<div id="logo"><img src="./testPDF_files/logo.png"></div>
+				<div id="schoolName">โรงเรียนชุมชนบ้านถ้ำสิงห์</div>
+				<div id="title">แบบรายงานผลการเรียนรายบุคคล</div>
+				<div id="termInfo">ระดับมัธยมศึกษาตอนต้น&nbsp;&nbsp;&nbsp;ภาคเรียนที่ 2&nbsp;&nbsp;&nbsp;ปีการศึกษา 2558</div>
+				<div id="studentInfo">ด.ช.ธนดล &nbsp;&nbsp;&nbsp;เลขประจำตัว 2095&nbsp;&nbsp;&nbsp;ชั้นมัธยมศึกษาปีที่ 1</div>
+			</div>
+			<div id="data">
+				<table cellspacing="0">
+					<thead>
+						<tr>
+							<th rowspan="4" class="subjectId">รหัสวิชา</th>
+							<th rowspan="4" class="subjectName">รายวิชา</th>
+							<th rowspan="4">ชั่วโมง</th>
+							<th rowspan="4">หน่วยกิต</th>
+							<th colspan="7">ผลการประเมิน</th>
+						</tr>
+						<tr>
+							<th colspan="3">ระหว่างเรียน</th>
+							<th rowspan="2" class="finalScore">คะแนนสอบปลายภาคเรียน</th>
+							<th rowspan="2">รวมคะแนนทั้งหมด</th>
+							<th rowspan="2" class="grade">ระดับผลการเรียน</th>
+							<th rowspan="2" class="beg">ผลการแก้ตัว</th>
+						</tr>
+						<tr>
+							<th class="durningScore">คะแนนสอบระหว่างเรียน</th>
+							<th class="midScore">คะแนนสอบกลางภาคเรียน</th>
+							<th class="totalDurningScore">รวมคะแนนเก็บระหว่างภาคเรียน</th>
+						</tr>
+						<tr>
+							<th>50</th>
+							<th>20</th>
+							<th>70</th>
+							<th>30</th>
+							<th>100</th>
+							<th></th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td class="merge"></td>
+							<td colspan="10" class="group lefttext">สาระการเรียนรู้พื้นฐาน</td>
+						</tr>
+						<!-- Begin Basic Subject Data -->
+						<tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>5</td><td>5</td><td>10</td><td>14</td><td>24</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>5</td><td>19</td><td>24</td><td>2</td><td>26</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>29</td><td>4</td><td>33</td><td>6</td><td>39</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>1</td><td>1</td><td>2</td><td>30</td><td>32</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>32</td><td>10</td><td>42</td><td>12</td><td>54</td><td>1</td><td class="beg"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>26</td><td>9</td><td>35</td><td>11</td><td>46</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr>						<!-- End Basic Subject Data -->
+						<tr>
+							<td class="merge"></td>
+							<td colspan="10" class="group lefttext">สาระการเรียนรู้เพิ่มเติม</td>
+						</tr>
+						<!-- Begin Extra Subject Data -->
+						<tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>27</td><td>8</td><td>35</td><td>12</td><td>47</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>46</td><td>19</td><td>65</td><td>22</td><td>87</td><td>4</td><td class="beg"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>34</td><td>0</td><td>34</td><td>19</td><td>53</td><td>1</td><td class="beg"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>4</td><td>20</td><td>24</td><td>0</td><td>24</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>0</td><td>11</td><td>11</td><td>17</td><td>28</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>39</td><td>1</td><td>40</td><td>24</td><td>64</td><td>2</td><td class="beg"></td></tr><tr><td class="lefttext">ท99999</td><td class="lefttext">ทดสอบรายวิชา</td><td>99</td><td>9.9</td><td>6</td><td>12</td><td>18</td><td>9</td><td>27</td><td>0</td><td class="beg"><input type="text" value="1"></td></tr>						<!-- End Extra Subject Data -->
+					</tbody>
+				</table>
+			</div>
+			<div id="footer">
+				<div id="sum">
+					<table cellspacing="0">
+						<thead>
+							<tr>
+								<th rowspan="2">สรุปผลการประเมิน</th>
+								<th colspan="2">ผลการเรียนที่ได้</th>
+							</tr>
+							<tr>
+								<th>ที่เรียน</th>
+								<th>ได้</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>จำนวนหน่วยกิต/น้ำหนักวิชาสาระการเรียนรู้พื้นฐาน</td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>จำนวนหน่วยกิต/น้ำหนักวิชาสาระการเรียนรู้เพิ่มเติม</td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>รวมจำนวนหน่วยกิต/น้ำหนัก</td>
+								<td></td>
+								<td></td>
+							</tr>
+							<tr>
+								<td>ระดับผลการเรียนเฉลี่ย (GPA)</td>
+								<td colspan="2"></td>
+							</tr>
+							<tr>
+								<td>ตำแหน่งเปร์เซ็นไทล์ (Pr)</td>
+								<td colspan="2"></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div id="sign">
+					<div class="signSpace">ลงชื่อ ................................................................</div>
+					<div>(นางทิพปภา&nbsp;&nbsp;&nbsp;พึ่งอ่ำ)</div>
+					<div>ครูประจำชั้น</div>
+					<div class="signSpace">ลงชื่อ ................................................................</div>
+					<div>(นายประมวล&nbsp;&nbsp;&nbsp;พรหมศร)</div>
+					<div>ผู้อำนวยการโรงเรียน</div>
+					<div class="signSpace">ลงชื่อ ................................................................</div>
+					<div>(&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;)</div>
+					<div>ผู้ปกครอง</div>
+				</div>
+			</div>
+		</div>
+		<div class="noprint" id="printOption">
+			<button onclick="window.print();">พิมพ์</button>
+		</div>
+	
+</body></html>

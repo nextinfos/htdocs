@@ -15,7 +15,7 @@
 					$percentile = 100 - $i*100/$total;
 					$previousPercentile = $percentile;
 				}
-				$percentiles[$key] = $percentile;
+				$percentiles[$key] = number_format($percentile, 2, '.', '');
 				$previousValue = $value;
 				$i++;
 			}
@@ -266,7 +266,7 @@
 			foreach($scoreList as $key => $value) {
 				$report.= "<th><div class=\"ah\"><span>$value</span><div></th>\n";
 			}
-			$report.='<th>รวม</th><th>เต็ม</th><th>%</th><th>Per</th></tr>';
+			$report.='<th>รวม</th><th>เต็ม</th><th>%</th><th>Percentile</th></tr>';
 			$report.='<tr><th colspan="2" class="maxScore">คะแนนเต็ม</th>';
 			foreach($scoreMax as $key => $value) {
 				$report.= "<th class=\"maxScore\">$value</th>\n";
@@ -329,6 +329,7 @@
 				}
 				mysql_free_result($objQuerya);
 				$per = @round($sumScore/$sumMaxScore*100,2);
+				$per = number_format($per, 2, '.', '');
 				$scoreArray[$studentID] = $sumScore;
 				if($per<$warnPer&&$per>=$lowPer){
 					$per = '<span class="warnPer">'.$per.'</span>';
@@ -340,7 +341,7 @@
 					$rowClass = 'pass';
 				}
 				$report.='<tr class="'.$rowClass.'"><td>'.$row['studentID'].'</td><td>'.$row['firstName'].'&nbsp;&nbsp;&nbsp;'.$row['lastName'].'</td>'."\n".$reportr;
-				$report.="<td>$sumScore</td><td>$sumMaxScore</td><td id='$studentID'>$per%</td>\n";
+				$report.="<td>$sumScore</td><td>$sumMaxScore</td><td id='$studentID' class='righttext'>$per%</td>\n";
 				$report.='</tr>'."\n";
 			}
 			$report.='</table>'."\n";
@@ -371,6 +372,9 @@
 				img.icon {
 					width: 15px;
 					height: 15px;
+				}
+				.righttext {
+					text-align: right;
 				}
 				div.ah>span {
 					writing-mode: lr-tb;
@@ -431,7 +435,7 @@
 					console.log('<?php echo json_encode(getPercentile($scoreArray));?>');
 					var data = $.parseJSON('<?php echo json_encode(getPercentile($scoreArray));?>');
 					$.each(data, function( index, value ) {
-						 	$( "<td>"+value+"</td>" ).insertAfter( "td[id="+index+"]" );
+						 	$( "<td class='righttext'>"+value+"</td>" ).insertAfter( "td[id="+index+"]" );
 						});
 				});
 			</script>
@@ -603,6 +607,7 @@
 				mysql_free_result($objQuerya);
 				$abs = $countAtdList-($intime+$late);
 				$per = @round(($intime+$late)/$countAtdList*100,2);
+				$per = number_format($per, 2, '.', '');
 				if($per<=$warnPer&&$per>$lowPer){
 					$per = '<span class="warnPer">'.$per.'</span>';
 					$rowClass = 'warn';
@@ -613,7 +618,7 @@
 					$rowClass = 'pass';
 				}
 				$report.='<tr class="'.$rowClass.'"><td>'.$row['studentID'].'</td><td>'.$row['firstName'].'&nbsp;&nbsp;&nbsp;'.$row['lastName'].'</td>'."\n".$reportr;
-				$report.="<td>$intime</td><td>$late</td><td>$abs</td><td>$per%</td>\n";
+				$report.="<td>$intime</td><td>$late</td><td>$abs</td><td class='righttext'>$per%</td>\n";
 				$report.='</tr>'."\n";
 			}
 			$report.='</table>'."\n";
@@ -638,6 +643,7 @@
 			.low { background-color: rgba(255,0,0,0.3);}
 			.warn { background-color: rgba(255,255,0,0.3);}
 			.pass { background-color: rgba(0,255,0,0.3);}
+			.righttext { text-align: right; }
 			input.spinnerBox {
 				width: 35px;
 			}

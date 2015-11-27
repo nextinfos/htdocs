@@ -81,6 +81,23 @@
 		}
 		return $return;
 	}
+	function getLevelName($gradeYear){
+		switch ($gradeYear){
+			case '1':
+			case '2':
+			case '3':	$return = 'ประถมศึกษาตอนต้น'; break;
+			case '4':
+			case '5':
+			case '6':	$return = 'ประถมศึกษาตอนปลาย'; break;
+			case '7':
+			case '8':
+			case '9':	$return = 'มัธยมศึกษาตอนต้น'; break;
+			case '10':
+			case '11':
+			case '12':	$return = 'มัธยมศึกษาตอนปลาย'; break;
+		}
+		return $return;
+	}
 	function getTerm(){
 		$date = date('Y-m-d');
 // 		$date=date('Y-m-d', strtotime("10/10/".getYear()));	//--(m/d/Y)
@@ -119,5 +136,19 @@
 			$pass[] = $alphabet[$n];
 		}
 		return implode($pass); //turn the array into a string
+	}
+	function gradeCal($min,$max,$point,$score){
+		$score = round($score,$point,PHP_ROUND_HALF_UP);
+		$result = NULL;
+		if($score<$max[0])	$result = '0';
+		elseif($score<$max[1])	$result = '1';
+		elseif($score<$max[2])	$result = '1.5';
+		elseif($score<$max[3])	$result = '2';
+		elseif($score<$max[4])	$result = '2.5';
+		elseif($score<$max[5])	$result = '3';
+		elseif($score<$max[6])	$result = '3.5';
+		elseif($score<=$max[7])	$result = '4';
+		else $result = 'N/A';
+		return $result!=NULL?$result:false;
 	}
 ?>
