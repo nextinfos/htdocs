@@ -280,12 +280,16 @@
 				$( '.studentList' ).show('blind', 500);
 			});
 		});
+		$( '#gradeCal' ).click(function(){
+			window.location="?action=gradeCal";
+		});
 		$('fieldset').addClass("ui-corner-all");
 		$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
 	});
 </script>
 <div id="formHolder">
-	<div><h1>เพิ่มการลงคะแนน</h1></div>
+	<div><h1>การลงคะแนน</h1></div>
+<!-- 	<div><button id="gradeCal">ตัดเกรด</button></div> -->
 	<div>
 		<select name="subject" style="width:300px;" id="subject">
 	  		<option value="0">กำลังประมวลผล</option>
@@ -301,7 +305,7 @@
 			  <option value="TASK">คะแนนชิ้นงาน</option>
 			  <option value="QUIZ">คะแนนตอบคำถาม</option>
 			  <option value="EXAM">คะแนนสอบ</option>
-			  <option value="GRADE">เกรด</option>
+<!-- 			  <option value="GRADE">เกรด</option> -->
 			</select>
 		</div>
 		<div class="spacer"></div>

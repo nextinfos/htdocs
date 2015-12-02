@@ -151,4 +151,11 @@
 		else $result = 'N/A';
 		return $result!=NULL?$result:false;
 	}
+	function normalization($i,$max,$target,$point){
+		if($i>0&&$max>0){
+			return round(($i/$max*$target),$point);
+		}	else{
+			return 0;
+		}
+	}
 ?>

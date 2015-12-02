@@ -374,6 +374,22 @@
  	                backColor: "rgba(20,20,20,0.7)",
  	                borderColor: "rgba(200,200,200,0.1)"
  	 			});
+ 	 			buttonsModel = new Array();
+ 	 			buttonsModel.push({ text: "รายวิชา", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=studentRegistrar'; } , cssIcon: "fa icon-folder-add", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel.push({ text: "ชั้นเรียน", click: function (e, obj) { window.location.href = '?action=subjectManager&tag=studentRegistrarPackage'; } , cssIcon: "fa icon-folder-add", cssLabel: "", cssItem: "itemRadial" });
+ 	 			$("#regSubject").ninjaRadial({
+ 	 			     buttons: buttonsModel,
+ 	                backColor: "rgba(20,20,20,0.7)",
+ 	                borderColor: "rgba(200,200,200,0.1)"
+ 	 			});
+ 	 			buttonsModel = new Array();
+ 	 			buttonsModel.push({ text: "บันทึกคะแนน", click: function (e, obj) { window.location.href = '?action=scoreManager'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel.push({ text: "ตัดเกรด", click: function (e, obj) { window.location.href = '?action=gradeCal'; } , cssIcon: "fa icon-book", cssLabel: "", cssItem: "itemRadial" });
+ 	 			$("#scoreMan").ninjaRadial({
+ 	 			     buttons: buttonsModel,
+ 	                backColor: "rgba(20,20,20,0.7)",
+ 	                borderColor: "rgba(200,200,200,0.1)"
+ 	 			});
  			});
  			setInterval(function(){
  				$.post('index.php',{systemErrorCheck: '1'},function(data){
@@ -435,12 +451,12 @@
 				<?php if($confUserType=="instructor"){?>
 				<?php		if($confSuperUser=="1"){?>
 				<a href="#" class="icon-book" id="menuSubject">จัดการรายวิชา</a>
-				<a href="?action=subjectManager&tag=studentRegistrar" class="icon-persons">ลงทะเบียนนร.</a>
+				<a href="#" class="icon-persons" id="regSubject">ลงทะเบียนนร.</a>
 				<a href="?action=studentManager&tag=add" class="icon-personadd">เพิ่มข้อมูลนร.</a>
 				<a href="?action=instructorManager&tag=add" class="icon-personadd">เพิ่มข้อมูลครู</a>
 				<?php 		} else {?>
 				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
-				<a href="?action=scoreManager" class="icon-book">การลงคะแนน</a>
+				<a href="#" id="scoreMan" class="icon-book">การจัดการคะแนน</a>
 				<a href="?action=studentRegisterList" class="icon-group-outline">รายชื่อนักเรียนที่ลงทะเบียน</a>
 				<a href="?action=insReport" class="icon-group-outline">นักเรียนในที่ปรึกษา</a>
 				<?php 		}?>

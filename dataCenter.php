@@ -495,13 +495,14 @@ if($action=="get"){
 				);
 			}
 		} else {
-			$data['data'][] = array(
-					'cardID'=>'',
-					'studentID'=>'',
-					'firstName'=>'ไม่พบข้อมูล',
-					'lastName'=>'',
-					'grade'=>''
-			);
+// 			$data['data'][] = array(
+// 					'cardID'=>'',
+// 					'studentID'=>'',
+// 					'firstName'=>'ไม่พบข้อมูล',
+// 					'lastName'=>'',
+// 					'grade'=>''
+// 			);
+			$data['data']='';
 		}
 		echo json_encode($data);
 	}elseif($type=="stdList"){
@@ -855,7 +856,7 @@ if($action=="get"){
 			$objQuery = mysql_query($strSQL);
 			if($objQuery&&mysql_num_rows($objQuery)>0){
 				while($row=mysql_fetch_array($objQuery)){
-					$preData['grade'] = $row['grade']?$row['grade']:'--';
+					$preData['grade'] = $row['grade']!=''?$row['grade']:'--';
 					$preData['subjectID'] = $row['subjectID'];
 					$preData['subjectName'] = $row['name'];
 					$strSQL = sprintf(
@@ -1052,6 +1053,181 @@ if($action=="get"){
 			$data['srtSQL'] = $strSQL;
 		}
 		echo json_encode($data);
+	} elseif($type=='gradeCal'){
+		$tag = $_REQUEST['tag'];
+		$subjectID = $_REQUEST['subjectID'];
+		$normalize = $_REQUEST['normalize'];
+		if($tag=='info'){
+			$strSQL = sprintf(
+					"
+					SELECT
+						maxScore,
+						type
+					FROM
+						scoreinfo
+					WHERE
+						subjectID = '%s' AND
+						registerID = 
+						(
+							SELECT
+								registerID
+							FROM
+								registerinfo
+							WHERE
+								term = '%s' AND
+								year = '%s'
+						)
+					",
+					mysql_real_escape_string($subjectID),
+					mysql_real_escape_string(getTerm()),
+					mysql_real_escape_string(getYear())
+			);
+			$objQuery = mysql_query($strSQL);
+			if($objQuery&&mysql_num_rows($objQuery)>0){
+				$foundMid = false;
+				$beforeMidScore = 0;
+				$midScore = 0;
+				$afterMidScore = 0;
+				$finalScore = 0;
+				while($row=mysql_fetch_assoc($objQuery)){
+					if($row['type']!='EXAM'){
+						if(!$foundMid){
+							$beforeMidScore += $row['maxScore'];
+						} else {
+							$afterMidScore += $row['maxScore'];
+						}
+					} else {
+						if(!$foundMid){
+							$midScore += $row['maxScore'];
+							$foundMid = true;
+						} else {
+							$finalScore += $row['maxScore'];
+						}
+					}
+				}
+				$return['beforeMidScore'] = $beforeMidScore;
+				$return['midScore'] = $midScore;
+				$return['afterMidScore'] = $afterMidScore;
+				$return['finalScore'] = $finalScore;
+				if($beforeMidScore>0&&$midScore>0&&$afterMidScore>0&&$finalScore>0){
+					$return['status'] = 'SUCCESS';
+					$maxScore = ($beforeMidScore+$midScore+$afterMidScore+$finalScore);
+					$return['maxScore'] = $maxScore;
+				} else {
+					$return['status'] = 'INVALID';
+				}
+			} else {
+				if($objQuery){
+					$return['status'] = 'INVALID';
+				} else {
+					$return['status'] = 'ERROR';
+				}
+			}
+			$return['subjectID'] = $subjectID;
+		} elseif($tag=='preview'){
+			$max = $_REQUEST['max'];
+			if($subjectID&&$max){
+				$max = json_decode($max);
+				$maxPass = true;
+				for($i=0;$i<sizeof($max);$i++){
+					if($max[$i]==''||$max[$i]==null||!isset($max[$i])){
+						$maxPass = false;
+						break;
+					}
+				}
+				if($maxPass){
+					$maxScore = $max[7];
+					$strSQL = sprintf(
+							"
+							SELECT
+								stu.studentID,stu.firstName,stu.lastName,SUM(stusco.score) AS score
+							FROM
+								`studentscore` stusco RIGHT JOIN `student` stu ON stusco.studentID = stu.studentID
+							WHERE
+								stusco.scoreID IN
+								(
+								SELECT
+									scoreID
+								FROM
+									scoreinfo
+								WHERE
+									subjectID = '%s' AND
+									registerID =
+									(
+										SELECT
+											registerID
+										FROM
+											registerinfo
+										WHERE
+											term = '%s' AND
+											year = '%s'
+									)
+								) OR (stu.studentID IN (
+									SELECT
+										studentID
+									FROM
+										`register-student` regstu
+									WHERE
+										regstu.subjectID = '%s' AND
+										regstu.registerID =
+										(
+											SELECT
+												registerID
+											FROM
+												registerinfo
+											WHERE
+												term = '%s' AND
+												year = '%s'
+										)
+								) AND stusco.subjectID IS NULL
+							)
+							GROUP BY
+								studentID
+							",
+							mysql_real_escape_string($subjectID),
+							mysql_real_escape_string(getTerm()),
+							mysql_real_escape_string(getYear()),
+							mysql_real_escape_string($subjectID),
+							mysql_real_escape_string(getTerm()),
+							mysql_real_escape_string(getYear()),
+							mysql_real_escape_string($subjectID)
+					);
+					$objQuery = mysql_query($strSQL);
+					if($objQuery&&mysql_num_rows($objQuery)){
+						while($row=mysql_fetch_assoc($objQuery)){
+							$preData = $row;
+							if($row['score']=='') $preData['score'] = 0;
+							$grade = gradeCal(0,$max,0,$row['score']);
+							$select = '<select name="grade" style="width: 80px;">';
+							$select.= '<option value="">--</option>';
+							$select.= '<option value="4"'.selected($grade, '4').'>4.0</option>';
+							$select.= '<option value="3.5"'.selected($grade, '3.5').'>3.5</option>';
+							$select.= '<option value="3"'.selected($grade, '3').'>3.0</option>';
+							$select.= '<option value="2.5"'.selected($grade, '2.5').'>2.5</option>';
+							$select.= '<option value="2"'.selected($grade, '2').'>2.0</option>';
+							$select.= '<option value="1.5"'.selected($grade, '1.5').'>1.5</option>';
+							$select.= '<option value="1"'.selected($grade, '1').'>1.0</option>';
+							$select.= '<option value="0"'.selected($grade, '0').'>0</option>';
+							$select.= '<option value="W"'.selected($grade, 'W').'>W</option>';
+							$select.= '</select>';
+							$preData['grade'] = '<input type="hidden" name="studentID" value="'.$row['studentID'].'">'.$select;
+							$preData['score'] = $preData['score'].'/'.$maxScore;
+							$return['data'][] = $preData;
+						}
+						$return['status'] = 'SUCCESS';
+					} else {
+						$return['status'] = 'FAIL';
+						$return['strSQL'] = $strSQL;
+					}
+				} else {
+					$return['status'] = 'MAXP';
+					$return['data'] = '';
+				}
+			} else {
+				$return['data'] = '';
+			}
+		}
+		echo json_encode($return);
 	}
 } elseif($action=="set"){
 	if($type=="atdList"){

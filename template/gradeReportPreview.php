@@ -1,14 +1,16 @@
 <?php
-	if($_REQUEST['pdf']=='1'){
-		require 'PDFGradeReport.php';
-		exit();
-	} else {
 	$studentID = $_REQUEST['studentID'];
 	$term = $_REQUEST['term'];
 	$year = $_REQUEST['year'];
 // 	$confDurningScore = 60;
 	$confMidScore = 50;
 	$confFinalScore = 50;
+	$countRegBasic=0;
+	$countRegExtra=0;
+	$countBasic=0;
+	$countExtra=0;
+	$GPAStatus = true;
+	$GPACal = 0;
 	$strSQL = sprintf(
 			"
 				SELECT
@@ -20,7 +22,8 @@
 					stu.gender,
 					stu.gradeYear,
 					ins.firstName AS insFirstName,
-					ins.lastName AS insLastName
+					ins.lastName AS insLastName,
+					regstu.grade
 				FROM
 					`register-subject` regsub,
 					`register-student` regstu,
@@ -28,6 +31,7 @@
 					`student` stu,
 					`instructor` ins
 				WHERE
+					sub.type = 'BASIC' AND
 					stu.instructorID = ins.instructorID AND
 					regstu.subjectID = regsub.subjectID AND
 					regstu.subjectID = sub.subjectID AND
@@ -52,44 +56,220 @@
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)){
 		while($row=mysql_fetch_assoc($objQuery)){
-			$preName = $row['gender'];
-			$gradeYear = $row['gradeYear'];
-			$firstName = $row['firstName'];
-			$lastName = $row['lastName'];
-			$insFirstName = $row['insFirstName'];
-			$insLastName = $row['insLastName'];
-			$durningScore = NULL;
-			$strSQL2 = sprintf(
-					"
-				SELECT
-					SUM(stusco.score) AS durningScore,
-					(
-					SELECT
-						SUM(maxScore)
-					FROM
-						`scoreinfo`
-					WHERE
-						subjectID = '%s' AND
-						type IN ('TASK','QUIZ') AND
-						registerID = (
+			if(isset($row['grade'])||$row['grade']!=''){
+				$preName = $row['gender'];
+				$gradeYear = $row['gradeYear'];
+				$firstName = $row['firstName'];
+				$lastName = $row['lastName'];
+				$insFirstName = $row['insFirstName'];
+				$insLastName = $row['insLastName'];
+				$durningScore = NULL;
+				$maxFoundMid = false;
+				$maxBeforeMidScore = 0;
+				$maxMidScore = 0;
+				$maxAfterMidScore = 0;
+				$maxFinalScore = 0;
+				$foundMid = false;
+				$beforeMidScore = 0;
+				$midScore = 0;
+				$afterMidScore = 0;
+				$finalScore = 0;
+				$strSQL2 = sprintf(
+						"
+						SELECT
+							maxScore,
+							type
+						FROM
+							`scoreinfo`
+						WHERE
+							subjectID = '%s' AND
+							registerID = (
+								SELECT
+									registerID
+								FROM
+									`registerinfo`
+								WHERE
+									term = '%s' AND
+									year = '%s'
+							)
+						",
+						mysql_real_escape_string($row['subjectID']),
+						mysql_real_escape_string($term),
+						mysql_real_escape_string($year)
+				);
+				$objQuery2 = mysql_query($strSQL2);
+				if($objQuery2&&mysql_num_rows($objQuery2)){
+					while($row2=mysql_fetch_assoc($objQuery2)){
+						if($row2['type']!='EXAM'){
+							if(!$maxFoundMid){
+								$maxBeforeMidScore += $row2['maxScore'];
+							} else {
+								$maxAfterMidScore += $row2['maxScore'];
+							}
+						} else {
+							if(!$maxFoundMid){
+								$maxMidScore += $row2['maxScore'];
+								$maxFoundMid = true;
+							} else {
+								$maxFinalScore += $row2['maxScore'];
+							}
+						}
+					}
+					$maxScore = ($maxBeforeMidScore+$maxMidScore+$maxAfterMidScore+$maxFinalScore);
+					$strSQL3 = sprintf(
+							"
 							SELECT
-								registerID
+								stusco.score,
+								sco.type
 							FROM
-								`registerinfo`
+								`studentscore` stusco,
+								`student` stu,
+								`scoreinfo` sco
 							WHERE
-								term = '%s' AND
-								year = '%s'
-						)
-					) AS maxScore
+								stusco.studentID = '%s' AND
+								stusco.studentID = stu.studentID AND
+								stusco.scoreID = sco.scoreID AND
+								stusco.scoreID IN
+									(
+										SELECT
+											scoreID
+										FROM
+											scoreinfo
+										WHERE
+											subjectID = '%s' AND
+											registerID =
+											(
+												SELECT
+													registerID
+												FROM
+													registerinfo
+												WHERE
+													term = '%s' AND
+													year = '%s'
+											)
+										)
+							",
+							mysql_real_escape_string($studentID),
+							mysql_real_escape_string($row['subjectID']),
+							mysql_real_escape_string($term),
+							mysql_real_escape_string($year)
+					);
+					$objQuery3 = mysql_query($strSQL3);
+					if($objQuery3&&mysql_num_rows($objQuery3)){
+						while($row3=mysql_fetch_assoc($objQuery3)){
+							if($row3['type']!='EXAM'){
+								if(!$foundMid){
+									$beforeMidScore += $row3['score'];
+								} else {
+									$afterMidScore += $row3['score'];
+								}
+							} else {
+								if(!$foundMid){
+									$midScore += $row3['score'];
+									$foundMid = true;
+								} else {
+									$finalScore += $row3['score'];
+								}
+							}
+						}
+					}
+				}
+				$strSQL2 = sprintf(
+						"
+						SELECT
+							grade
+						FROM
+							`register-student`
+						WHERE
+							studentID = '%s' AND
+							subjectID = '%s' AND
+							registerID = (
+								SELECT
+									registerID
+								FROM
+									`registerinfo`
+								WHERE
+									term = '%s' AND
+									year = '%s'
+							)
+						",
+						mysql_real_escape_string($studentID),
+						mysql_real_escape_string($row['subjectID']),
+						mysql_real_escape_string($term),
+						mysql_real_escape_string($year)
+				);
+				$objQuery2 = mysql_query($strSQL2);
+				if($objQuery2){
+					$row2 = mysql_fetch_assoc($objQuery2);
+					$grade = $row2['grade'];
+				}
+				if(!isset($grade)||$grade=='') $grade = '--';
+				$predata = NULL;
+				$predata['subjectID'] = $row['subjectID'];
+				$predata['subjectName'] = $row['name'];
+				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
+				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				if($grade!='W'&&$grade!='0')
+				$countBasic += $predata['weight'];
+				$predata['durningScore'] = $durningScore;
+				$predata['midScore'] = normalization(($beforeMidScore+$midScore), ($maxBeforeMidScore+$maxMidScore), $confMidScore,0);
+	// 			$predata['midScore'] =  ($beforeMidScore+$midScore).'/'.($maxBeforeMidScore+$maxMidScore);
+				$predata['totalDurningScore'] = $predata['durningScore']+$predata['midScore'];
+				$predata['finalScore'] =  normalization(($afterMidScore+$finalScore), ($maxAfterMidScore+$maxFinalScore), $confFinalScore,0);
+	// 			$predata['finalScore'] =  ($afterMidScore+$finalScore).'/'.($maxAfterMidScore+$maxFinalScore);
+				$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
+				$predata['grade'] = $grade;
+				if($_REQUEST['pdf']=='1'){
+					$predata['beg'] = $predata['grade']=='0'?'':'';
+				} else {
+					$predata['beg'] = $predata['grade']=='0'?'<input type="text" value="" />':'';
+				}
+				$dataInfoBasic[] = $predata;
+			} else {
+				$GPAStatus = false;
+				$predata['subjectID'] = $row['subjectID'];
+				$predata['subjectName'] = $row['name'];
+				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
+				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				$countRegBasic += $predata['weight'];
+				$predata['durningScore'] = '--';
+				$predata['midScore'] = '--';
+				$predata['totalDurningScore'] = '--';
+				$predata['finalScore'] = '--';
+				$predata['totalScore'] = '--';
+				$predata['grade'] = '--';
+				$predata['beg'] = '';
+				$dataInfoBasic[] = $predata;
+			}
+		}
+	}
+	$strSQL = sprintf(
+			"
+				SELECT
+					sub.subjectID,
+					sub.name,
+					sub.type,
+					stu.firstName,
+					stu.lastName,
+					stu.gender,
+					stu.gradeYear,
+					ins.firstName AS insFirstName,
+					ins.lastName AS insLastName,
+					regstu.grade
 				FROM
-					`studentscore` stusco,
-					`scoreinfo` scoinfo
+					`register-subject` regsub,
+					`register-student` regstu,
+					`subject` sub,
+					`student` stu,
+					`instructor` ins
 				WHERE
-					stusco.scoreID = scoinfo.scoreID AND
-					stusco.studentID = '%s' AND
-					stusco.subjectID = '%s' AND
-					scoinfo.type IN ('TASK','QUIZ') AND
-					stusco.registerID = (
+					sub.type = 'EXTRA' AND
+					stu.instructorID = ins.instructorID AND
+					regstu.subjectID = regsub.subjectID AND
+					regstu.subjectID = sub.subjectID AND
+					regstu.studentID = '%s' AND
+					regstu.studentID = stu.studentID AND
+					regstu.registerID = (
 						SELECT
 							registerID
 						FROM
@@ -98,75 +278,173 @@
 							term = '%s' AND
 							year = '%s'
 					)
+				ORDER BY
+					regstu.subjectID ASC
 				",
-					mysql_real_escape_string($row['subjectID']),
-					mysql_real_escape_string($term),
-					mysql_real_escape_string($year),
-					mysql_real_escape_string($studentID),
-					mysql_real_escape_string($row['subjectID']),
-					mysql_real_escape_string($term),
-					mysql_real_escape_string($year)
-			);
-			$objQuery2 = mysql_query($strSQL2);
-			if($objQuery2&&mysql_num_rows($objQuery2)){
-				$row2=mysql_fetch_assoc($objQuery2);
-				$durningScore = $row2['durningScore']==NULL?'--':$row2['durningScore'];
- 				if($durningScore!='--'&&$row2['maxScore']>=$confDurningScore){
- 					$durningScore = round($durningScore/$row2['maxScore']*$confDurningScore,0).'*';
- 				}
+			mysql_real_escape_string($studentID),
+			mysql_real_escape_string($term),
+			mysql_real_escape_string($year)
+	);
+	$objQuery = mysql_query($strSQL);
+	if($objQuery&&mysql_num_rows($objQuery)){
+		while($row=mysql_fetch_assoc($objQuery)){
+			if(isset($row['grade'])||$row['grade']!=''){
+				$preName = $row['gender'];
+				$gradeYear = $row['gradeYear'];
+				$firstName = $row['firstName'];
+				$lastName = $row['lastName'];
+				$insFirstName = $row['insFirstName'];
+				$insLastName = $row['insLastName'];
+				$durningScore = NULL;
+				$maxFoundMid = false;
+				$maxBeforeMidScore = 0;
+				$maxMidScore = 0;
+				$maxAfterMidScore = 0;
+				$maxFinalScore = 0;
+				$foundMid = false;
+				$beforeMidScore = 0;
+				$midScore = 0;
+				$afterMidScore = 0;
+				$finalScore = 0;
+				$strSQL2 = sprintf(
+						"
+						SELECT
+							maxScore,
+							type
+						FROM
+							`scoreinfo`
+						WHERE
+							subjectID = '%s' AND
+							registerID = (
+								SELECT
+									registerID
+								FROM
+									`registerinfo`
+								WHERE
+									term = '%s' AND
+									year = '%s'
+							)
+						",
+						mysql_real_escape_string($row['subjectID']),
+						mysql_real_escape_string($term),
+						mysql_real_escape_string($year)
+				);
+				$objQuery2 = mysql_query($strSQL2);
+				if($objQuery2&&mysql_num_rows($objQuery2)){
+					while($row2=mysql_fetch_assoc($objQuery2)){
+						if($row2['type']!='EXAM'){
+							if(!$maxFoundMid){
+								$maxBeforeMidScore += $row2['maxScore'];
+							} else {
+								$maxAfterMidScore += $row2['maxScore'];
+							}
+						} else {
+							if(!$maxFoundMid){
+								$maxMidScore += $row2['maxScore'];
+								$maxFoundMid = true;
+							} else {
+								$maxFinalScore += $row2['maxScore'];
+							}
+						}
+					}
+					$maxScore = ($maxBeforeMidScore+$maxMidScore+$maxAfterMidScore+$maxFinalScore);
+					$strSQL3 = sprintf(
+							"
+							SELECT
+								stusco.score,
+								sco.type
+							FROM
+								`studentscore` stusco,
+								`student` stu,
+								`scoreinfo` sco
+							WHERE
+								stusco.studentID = '%s' AND
+								stusco.studentID = stu.studentID AND
+								stusco.scoreID = sco.scoreID AND
+								stusco.scoreID IN
+									(
+										SELECT
+											scoreID
+										FROM
+											scoreinfo
+										WHERE
+											subjectID = '%s' AND
+											registerID =
+											(
+												SELECT
+													registerID
+												FROM
+													registerinfo
+												WHERE
+													term = '%s' AND
+													year = '%s'
+											)
+										)
+							",
+							mysql_real_escape_string($studentID),
+							mysql_real_escape_string($row['subjectID']),
+							mysql_real_escape_string($term),
+							mysql_real_escape_string($year)
+					);
+					$objQuery3 = mysql_query($strSQL3);
+					if($objQuery3&&mysql_num_rows($objQuery3)){
+						while($row3=mysql_fetch_assoc($objQuery3)){
+							if($row3['type']!='EXAM'){
+								if(!$foundMid){
+									$beforeMidScore += $row3['score'];
+								} else {
+									$afterMidScore += $row3['score'];
+								}
+							} else {
+								if(!$foundMid){
+									$midScore += $row3['score'];
+									$foundMid = true;
+								} else {
+									$finalScore += $row3['score'];
+								}
+							}
+						}
+					}
+				}
+				$grade = $row['grade'];
+				if(!isset($grade)||$grade=='') $grade = '--';
+				$predata = NULL;
+				$predata['subjectID'] = $row['subjectID'];
+				$predata['subjectName'] = $row['name'];
+				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
+				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				if($grade!='W'&&$grade!='0')
+				$countExtra += $predata['weight'];
+				$predata['durningScore'] = $durningScore;
+				$predata['midScore'] = normalization(($beforeMidScore+$midScore), ($maxBeforeMidScore+$maxMidScore), $confMidScore,0);
+				// 			$predata['midScore'] =  ($beforeMidScore+$midScore).'/'.($maxBeforeMidScore+$maxMidScore);
+				$predata['totalDurningScore'] = $predata['durningScore']+$predata['midScore'];
+				$predata['finalScore'] =  normalization(($afterMidScore+$finalScore), ($maxAfterMidScore+$maxFinalScore), $confFinalScore,0);
+				// 			$predata['finalScore'] =  ($afterMidScore+$finalScore).'/'.($maxAfterMidScore+$maxFinalScore);
+				$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
+				$predata['grade'] = $grade;
+				if($_REQUEST['pdf']=='1'){
+					$predata['beg'] = $predata['grade']=='0'?'':'';
+				} else {
+					$predata['beg'] = $predata['grade']=='0'?'<input type="text" value="" />':'';
+				}
+				$dataInfoExtra[] = $predata;
 			} else {
-				$durningScore = '--';
+				$GPAStatus = false;
+				$predata['subjectID'] = $row['subjectID'];
+				$predata['subjectName'] = $row['name'];
+				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
+				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				$countRegExtra += $predata['weight'];
+				$predata['durningScore'] = '--';
+				$predata['midScore'] = '--';
+				$predata['totalDurningScore'] = '--';
+				$predata['finalScore'] = '--';
+				$predata['totalScore'] = '--';
+				$predata['grade'] = '--';
+				$predata['beg'] = '';
+				$dataInfoExtra[] = $predata;
 			}
-// 			$strSQL2 = sprintf(
-// 					"
-// 				SELECT
-// 					SUM(score) AS durningScore,
-// 					SUM(scoinfo.maxScore) AS maxScore
-// 				FROM
-// 					`studentscore` stusco INNER JOIN `scoreinfo` scoinfo ON stusco.scoreID = scoinfo.scoreID
-// 				WHERE
-// 					stusco.studentID = '%s' AND
-// 					stusco.subjectID = '%s' AND
-// 					scoinfo.type = 'EXAM' AND
-// 					stusco.registerID = (
-// 						SELECT
-// 							registerID
-// 						FROM
-// 							`registerinfo`
-// 						WHERE
-// 							term = '%s' AND
-// 							year = '%s'
-// 					)
-// 				",
-// 					mysql_real_escape_string($studentID),
-// 					mysql_real_escape_string($row['subjectID']),
-// 					mysql_real_escape_string($term),
-// 					mysql_real_escape_string($year)
-// 			);
-// 			$objQuery2 = mysql_query($strSQL2);
-// 			if($objQuery2&&mysql_num_rows($objQuery2)){
-// 				$row2=mysql_fetch_assoc($objQuery2);
-// 				$durningScore = $row2['durningScore']==NULL?'--':$row2['durningScore'];
-// 			} else {
-// 				$durningScore = '--';
-// 			}
-			$predata = NULL;
-			$predata['subjectID'] = $row['subjectID'];
-			$predata['subjectName'] = $row['name'];
-			$predata['hour'] = $row['type']=='BASIC'?'60':'40';
-			$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
-			$predata['durningScore'] = $durningScore;
-			$predata['midScore'] = rand(0,50);
-			$predata['totalDurningScore'] = $predata['durningScore']+$predata['midScore'];
-			$predata['finalScore'] =  rand(0,50);
-			$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
-			$predata['grade'] = gradeCal(NULL, array(50,55,60,65,70,75,80,100), '0', $predata['totalScore']);
-			if($_REQUEST['pdf']=='1'){
-				$predata['beg'] = $predata['grade']=='0'?'1':'';
-			} else {
-				$predata['beg'] = $predata['grade']=='0'?'<input type="text" value="1" />':'';
-			}
-			$dataInfoBasic[] = $predata;
 		}
 	}
 	$year = $year+543;
@@ -186,42 +464,40 @@
 			midScore				=>	$confMidScore,
 			finalScore				=>	$confFinalScore
 	);
-//	Sample Data Generator Begin
-	for($i=0;$i<7;$i++){
-		$predata['subjectID'] = 'ท99999';
-		$predata['subjectName'] = 'ทดสอบรายวิชา';
-		$predata['hour'] = '99';
-		$predata['weight'] = '9.9';
-		$predata['durningScore'] = rand(0,60);
-		$predata['midScore'] = rand(0,20);
-		$predata['totalDurningScore'] = $predata['durningScore']+$predata['midScore'];
-		$predata['finalScore'] =  rand(0,20);
-		$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
-		$predata['grade'] = gradeCal(NULL, array(50,55,60,65,70,75,80,100), '0', $predata['totalScore']);
-		if($_REQUEST['pdf']=='1'){
-			$predata['beg'] = $predata['grade']=='0'?'1':'';
-		} else {
-			$predata['beg'] = $predata['grade']=='0'?'<input type="text" value="1" />':'';
-		}
-		$dataInfoExtra[] = $predata;
+	$totalReg = $countRegBasic+$countRegExtra;
+	$totalGain = $countBasic+$countExtra;
+	if($GPAStatus){
+	
+	} else {
+		$GPA = '--';
 	}
-//	Sample Data Generator End
+	if($_REQUEST['pdf']=='1'){
+		require 'PDFGradeReport.php';
+		exit();
+	} else {
 	function genData($data){
 		$res = '';
-		foreach ($data as $val){
+		if(sizeof($data)<1){
 			$res.= "\n\t\t\t\t\t\t<tr>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td class="lefttext">'.$val['subjectID']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td class="lefttext">'.$val['subjectName']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['hour']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['weight']."</td>";
-// 			$res.= "<td>".$val['durningScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['midScore']."</td>";
-// 			$res.= "<td>".$val['totalDurningScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['finalScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['totalScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['grade']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td class="beg">'.$val['beg']."</td>";
+			$res.= "\n\t\t\t\t\t\t\t".'<td class="lefttext merge"></td>';
+			$res.= "\n\t\t\t\t\t\t\t".'<td class="lefttext" colspan="8">--</td>';
 			$res.= "\n\t\t\t\t\t\t"."</tr>";
+		} else {
+			foreach ($data as $val){
+				$res.= "\n\t\t\t\t\t\t<tr>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td class="lefttext">'.$val['subjectID']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td class="lefttext">'.$val['subjectName']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['hour']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['weight']."</td>";
+	// 			$res.= "<td>".$val['durningScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['midScore']."</td>";
+	// 			$res.= "<td>".$val['totalDurningScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['finalScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['totalScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t"."<td>".$val['grade']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td class="beg">'.$val['beg']."</td>";
+				$res.= "\n\t\t\t\t\t\t"."</tr>";
+			}
 		}
 		return $res;
 	}
@@ -310,26 +586,26 @@
 						<tbody>
 							<tr>
 								<td>จำนวนหน่วยกิต/น้ำหนักวิชาสาระการเรียนรู้พื้นฐาน</td>
-								<td></td>
-								<td></td>
+								<td class="cent"><?php echo $countRegBasic;?></td>
+								<td class="cent"><?php echo $countBasic;?></td>
 							</tr>
 							<tr>
 								<td>จำนวนหน่วยกิต/น้ำหนักวิชาสาระการเรียนรู้เพิ่มเติม</td>
-								<td></td>
-								<td></td>
+								<td class="cent"><?php echo $countRegExtra;?></td>
+								<td class="cent"><?php echo $countExtra;?></td>
 							</tr>
 							<tr>
 								<td>รวมจำนวนหน่วยกิต/น้ำหนัก</td>
-								<td></td>
-								<td></td>
+								<td class="cent"><?php echo $totalReg;?></td>
+								<td class="cent"><?php echo $totalGain;?></td>
 							</tr>
 							<tr>
 								<td>ระดับผลการเรียนเฉลี่ย (GPA)</td>
-								<td colspan="2"></td>
+								<td colspan="2" class="cent"><?php echo $GPA;?></td>
 							</tr>
 							<tr>
 								<td>ตำแหน่งเปร์เซ็นไทล์ (Pr)</td>
-								<td colspan="2"></td>
+								<td colspan="2" class="cent"></td>
 							</tr>
 						</tbody>
 					</table>
@@ -348,8 +624,8 @@
 			</div>
 		</div>
 		<div class="noprint" id="printOption">
-			<button onclick="window.print();">พิมพ์</button>
-			<button id="pdfsave">บันทึกเป็น PDF</button>
+			<button onclick="window.print();" title="พิมพ์"><img src="images/print.png"></button>
+			<button id="pdfsave" title="บันทึกเป็น PDF"><img src="images/pdf-dl.png"></button>
 		</div>
 	</body>
 </html>
