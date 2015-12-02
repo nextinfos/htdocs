@@ -550,10 +550,14 @@
 	            transform: scale3d(1, 1, 1);
 	  }
 	}
+	#attendance>fieldset, #score>fieldset {
+		margin: 20px 0px;
+	}
 	#attendance, #score {
  		display: none; 
  		text-align: center;
  		padding-bottom: 20px;
+ 		overflow-x: scroll;
 	}
 	#attendance td, #score td {
 		text-align: center;
@@ -595,6 +599,7 @@ $(function() {
 		paging: false,
 		"bFilter" : false,
 		"bInfo": false,
+// 		scrollX: 320,
 		"columns":
 			[
 				{
@@ -736,6 +741,11 @@ function showScore(){
 				<a href="javascript:showScore();" class="card-face__social" title="ดูข้อมูลคะแนน">
 					<img src="images/list.png" width="36" height="36" draggable="false"/>
 				</a>
+				<?php if($confUserType=='instructor'){?>
+				<a href="preview.php?type=gradeReport&studentID=<?php echo $studentID;?>&term=<?php echo getTerm();?>&year=<?php  echo getYear();?>" target="_blank" class="card-face__social" title="พิมพ์ใบเกรด">
+					<img src="images/print.png" width="36" height="36" draggable="false"/>
+				</a>
+				<?php }?>
 <!-- 				<a href="https://plus.google.com/u/0/+MattiaAstorino/posts" target="_blank" class="card-face__social"> -->
 <!-- 					<img src="http://imgh.us/plus_5.svg" width="36" height="36" draggable="false"/> -->
 <!-- 				</a> -->
@@ -749,8 +759,8 @@ function showScore(){
 		<table class="display" id="reportAttendance">
 			<thead>
 				<tr>
-					<th>รหัสวิชา</th>
-					<th>วิชา</th>
+					<th style="min-width:80px;">รหัสวิชา</th>
+					<th style="min-width:180px;">วิชา</th>
 					<th>มา</th>
 					<th>สาย</th>
 					<th>ขาด</th>

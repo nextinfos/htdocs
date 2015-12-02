@@ -11,63 +11,63 @@
 </style>
 <script>
   $(function() {
-	    $( '#studentList' ).on( 'xhr.dt', function(){
-			setTimeout(function(){
-				$( 'button[name="viewAtd"]' ).button()
-				.click(function(){
-						window.open("?action=stuReport&type=atd&studentID="+$(this).attr('data-studentID'));
-				});
-				$( 'button[name="viewSco"]' ).button()
-				.click(function(){
-					window.open("?action=stuReport&type=sco&studentID="+$(this).attr('data-studentID'));
-				});
-			}, 100);
-		}).DataTable( {
-			paging: false,
-			"order": [0,'asc'],
-			"columns": [
-						{
-							data: "studentID",
-							"orderable": true 
-						},
-						{
-							data: "firstName",
-							"orderable": true
-						},
-						{
-							data: "lastName",
-							"orderable": true
-						},
-						{
-							data: "cardID",
-							"orderable": false
-						},
-						{
-							data: "secondCardID",
-							"orderable": false
-						},
-						{
-							data: "atd",
-							"orderable": false
-						},
-						{
-							data: "sco",
-							"orderable": false
-						},
-						{
-							data: "grade",
-							"orderable": false
-						}
-					],
-			ajax:  {
-				url: "dataCenter.php",
-				type: 'POST',
-				data: function ( d ) {
-					d.action = "get";
-					d.type = "insStuList";
-				}
-			}
-	    });
+// 	    $( '#studentList' ).on( 'xhr.dt', function(){
+// 			setTimeout(function(){
+// 				$( 'button[name="viewAtd"]' ).button()
+// 				.click(function(){
+// 						window.open("?action=stuReport&type=atd&studentID="+$(this).attr('data-studentID'));
+// 				});
+// 				$( 'button[name="viewSco"]' ).button()
+// 				.click(function(){
+// 					window.open("?action=stuReport&type=sco&studentID="+$(this).attr('data-studentID'));
+// 				});
+// 			}, 100);
+// 		}).DataTable( {
+// 			paging: false,
+// 			"order": [0,'asc'],
+// 			"columns": [
+// 						{
+// 							data: "studentID",
+// 							"orderable": true 
+// 						},
+// 						{
+// 							data: "firstName",
+// 							"orderable": true
+// 						},
+// 						{
+// 							data: "lastName",
+// 							"orderable": true
+// 						},
+// 						{
+// 							data: "cardID",
+// 							"orderable": false
+// 						},
+// 						{
+// 							data: "secondCardID",
+// 							"orderable": false
+// 						},
+// 						{
+// 							data: "atd",
+// 							"orderable": false
+// 						},
+// 						{
+// 							data: "sco",
+// 							"orderable": false
+// 						},
+// 						{
+// 							data: "grade",
+// 							"orderable": false
+// 						}
+// 					],
+// 			ajax:  {
+// 				url: "dataCenter.php",
+// 				type: 'POST',
+// 				data: function ( d ) {
+// 					d.action = "get";
+// 					d.type = "insStuList";
+// 				}
+// 			}
+// 	    });
 	    $('fieldset').addClass("ui-corner-all");
 		$('.studentListContainer').addClass("fg-toolbar ui-toolbar ui-widget-header ui-helper-clearfix");
 		$( '.profile' ).click(function(){

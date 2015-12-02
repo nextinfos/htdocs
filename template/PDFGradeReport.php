@@ -1,213 +1,25 @@
 <?php
-	$studentID = $_REQUEST['studentID'];
-	$term = $_REQUEST['term'];
-	$year = $_REQUEST['year'];
-// 	$confDurningScore = 60;
-	$confMidScore = 50;
-	$confFinalScore = 50;
-	$strSQL = sprintf(
-			"
-				SELECT
-					sub.subjectID,
-					sub.name,
-					sub.type,
-					stu.firstName,
-					stu.lastName,
-					stu.gender,
-					stu.gradeYear,
-					ins.firstName AS insFirstName,
-					ins.lastName AS insLastName
-				FROM
-					`register-subject` regsub,
-					`register-student` regstu,
-					`subject` sub,
-					`student` stu,
-					`instructor` ins
-				WHERE
-					stu.instructorID = ins.instructorID AND
-					regstu.subjectID = regsub.subjectID AND
-					regstu.subjectID = sub.subjectID AND
-					regstu.studentID = '%s' AND
-					regstu.studentID = stu.studentID AND
-					regstu.registerID = (
-						SELECT
-							registerID
-						FROM
-							`registerinfo`
-						WHERE
-							term = '%s' AND
-							year = '%s'
-					)
-				ORDER BY
-					regstu.subjectID ASC
-				",
-			mysql_real_escape_string($studentID),
-			mysql_real_escape_string($term),
-			mysql_real_escape_string($year)
-	);
-	$objQuery = mysql_query($strSQL);
-	if($objQuery&&mysql_num_rows($objQuery)){
-		while($row=mysql_fetch_assoc($objQuery)){
-			$preName = $row['gender'];
-			$gradeYear = $row['gradeYear'];
-			$firstName = $row['firstName'];
-			$lastName = $row['lastName'];
-			$insFirstName = $row['insFirstName'];
-			$insLastName = $row['insLastName'];
-			$durningScore = NULL;
-			$strSQL2 = sprintf(
-					"
-				SELECT
-					SUM(stusco.score) AS durningScore,
-					(
-					SELECT
-						SUM(maxScore)
-					FROM
-						`scoreinfo`
-					WHERE
-						subjectID = '%s' AND
-						type IN ('TASK','QUIZ') AND
-						registerID = (
-							SELECT
-								registerID
-							FROM
-								`registerinfo`
-							WHERE
-								term = '%s' AND
-								year = '%s'
-						)
-					) AS maxScore
-				FROM
-					`studentscore` stusco,
-					`scoreinfo` scoinfo
-				WHERE
-					stusco.scoreID = scoinfo.scoreID AND
-					stusco.studentID = '%s' AND
-					stusco.subjectID = '%s' AND
-					scoinfo.type IN ('TASK','QUIZ') AND
-					stusco.registerID = (
-						SELECT
-							registerID
-						FROM
-							`registerinfo`
-						WHERE
-							term = '%s' AND
-							year = '%s'
-					)
-				",
-					mysql_real_escape_string($row['subjectID']),
-					mysql_real_escape_string($term),
-					mysql_real_escape_string($year),
-					mysql_real_escape_string($studentID),
-					mysql_real_escape_string($row['subjectID']),
-					mysql_real_escape_string($term),
-					mysql_real_escape_string($year)
-			);
-			$objQuery2 = mysql_query($strSQL2);
-			if($objQuery2&&mysql_num_rows($objQuery2)){
-				$row2=mysql_fetch_assoc($objQuery2);
-				$durningScore = $row2['durningScore']==NULL?'--':$row2['durningScore'];
- 				if($durningScore!='--'&&$row2['maxScore']>=$confDurningScore){
- 					$durningScore = round($durningScore/$row2['maxScore']*$confDurningScore,0).'*';
- 				}
-			} else {
-				$durningScore = '--';
-			}
-// 			$strSQL2 = sprintf(
-// 					"
-// 				SELECT
-// 					SUM(score) AS durningScore,
-// 					SUM(scoinfo.maxScore) AS maxScore
-// 				FROM
-// 					`studentscore` stusco INNER JOIN `scoreinfo` scoinfo ON stusco.scoreID = scoinfo.scoreID
-// 				WHERE
-// 					stusco.studentID = '%s' AND
-// 					stusco.subjectID = '%s' AND
-// 					scoinfo.type = 'EXAM' AND
-// 					stusco.registerID = (
-// 						SELECT
-// 							registerID
-// 						FROM
-// 							`registerinfo`
-// 						WHERE
-// 							term = '%s' AND
-// 							year = '%s'
-// 					)
-// 				",
-// 					mysql_real_escape_string($studentID),
-// 					mysql_real_escape_string($row['subjectID']),
-// 					mysql_real_escape_string($term),
-// 					mysql_real_escape_string($year)
-// 			);
-// 			$objQuery2 = mysql_query($strSQL2);
-// 			if($objQuery2&&mysql_num_rows($objQuery2)){
-// 				$row2=mysql_fetch_assoc($objQuery2);
-// 				$durningScore = $row2['durningScore']==NULL?'--':$row2['durningScore'];
-// 			} else {
-// 				$durningScore = '--';
-// 			}
-			$predata = NULL;
-			$predata['subjectID'] = $row['subjectID'];
-			$predata['subjectName'] = $row['name'];
-			$predata['hour'] = $row['type']=='BASIC'?'60':'40';
-			$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
-			$predata['durningScore'] = $durningScore;
-			$predata['midScore'] = rand(0,50);
-			$predata['totalDurningScore'] = $predata['durningScore']+$predata['midScore'];
-			$predata['finalScore'] =  rand(0,50);
-			$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
-			$predata['grade'] = gradeCal(NULL, array(50,55,60,65,70,75,80,100), '0', $predata['totalScore']);
-			$predata['beg'] = $predata['grade']=='0'?'1':'';
-			$dataInfoBasic[] = $predata;
-		}
-	}
-	$year = $year+543;
-	$preName = $preName=='M'?'ด.ช.':'ด.ญ.';
-	$gradeYearName = getGradeYearName($gradeYear);
-	$level = getLevelName($gradeYear);
-	$instructor = $insFirstName.'&nbsp;&nbsp;&nbsp;'.$insLastName;
-	$data = array(
-			logo						=>	'images/logo.png',
-			schoolName			=>	'โรงเรียนชุมชนบ้านถ้ำสิงห์',
-			title						=>	'แบบรายงานผลการเรียนรายบุคคล',
-			director				=>	'นายประมวล&nbsp;&nbsp;&nbsp;พรหมศร',
-			instructor				=>	$instructor,
-			termInfo				=>	"ระดับ$level&nbsp;&nbsp;&nbsp;ภาคเรียนที่ $term&nbsp;&nbsp;&nbsp;ปีการศึกษา $year",
-			studentInfo			=>	"$preName$firstName $lastName&nbsp;&nbsp;&nbsp;เลขประจำตัว $studentID&nbsp;&nbsp;&nbsp;ชั้น$gradeYearName",
-			durningScore		=>	$confDurningScore,
-			midScore				=>	$confMidScore,
-			finalScore				=>	$confFinalScore
-	);
-//	Sample Data Generator Begin
-	for($i=0;$i<7;$i++){
-		$predata['subjectID'] = 'ท99999';
-		$predata['subjectName'] = 'ทดสอบรายวิชา';
-		$predata['hour'] = '99';
-		$predata['weight'] = '9.9';
-		$predata['durningScore'] = rand(0,60);
-		$predata['midScore'] = rand(0,20);
-		$predata['totalDurningScore'] = $predata['durningScore']+$predata['midScore'];
-		$predata['finalScore'] =  rand(0,20);
-		$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
-		$predata['grade'] = gradeCal(NULL, array(50,55,60,65,70,75,80,100), '0', $predata['totalScore']);
-		$predata['beg'] = $predata['grade']=='0'?'1':'';
-		$dataInfoExtra[] = $predata;
-	}
-//	Sample Data Generator End
 	function genData($data){
 		$res = '';
-		foreach ($data as $val){
+		if(sizeof($data)<1){
 			$res.= "\n\t\t\t\t\t\t<tr>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align: left !important;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['subjectID']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align: left !important;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['subjectName']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['hour']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['weight']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['midScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['finalScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['totalScore']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['grade']."</td>";
-			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['beg']."</td>";
+			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align: left !important;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>';
+			$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align: left !important;border-bottom: 1px solid black;padding: 4px 5px;" colspan="8">--</td>';
 			$res.= "\n\t\t\t\t\t\t"."</tr>";
+		} else {
+			foreach ($data as $val){
+				$res.= "\n\t\t\t\t\t\t<tr>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align: left !important;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['subjectID']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align: left !important;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['subjectName']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['hour']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['weight']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['midScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['finalScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['totalScore']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['grade']."</td>";
+				$res.= "\n\t\t\t\t\t\t\t".'<td style="text-align:center;border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">'.$val['beg']."</td>";
+				$res.= "\n\t\t\t\t\t\t"."</tr>";
+			}
 		}
 		return $res;
 	}
@@ -300,26 +112,26 @@
 						<tbody>
 							<tr>
 								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">จำนวนหน่วยกิต/น้ำหนักวิชาสาระการเรียนรู้พื้นฐาน</td>
-								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
-								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
+								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $countRegBasic;?></td>
+								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $countBasic;?></td>
 							</tr>
 							<tr>
 								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">จำนวนหน่วยกิต/น้ำหนักวิชาสาระการเรียนรู้เพิ่มเติม</td>
-								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
-								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
+								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $countRegExtra;?></td>
+								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $countExtra;?></td>
 							</tr>
 							<tr>
 								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">รวมจำนวนหน่วยกิต/น้ำหนัก</td>
-								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
-								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
+								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $totalReg;?></td>
+								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $totalGain;?></td>
 							</tr>
 							<tr>
 								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">ระดับผลการเรียนเฉลี่ย (GPA)</td>
-								<td colspan="2" style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
+								<td colspan="2" style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"><?php echo $GPA;?></td>
 							</tr>
 							<tr>
 								<td style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;">ตำแหน่งเปร์เซ็นไทล์ (Pr)</td>
-								<td colspan="2" style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;"></td>
+								<td colspan="2" style="border-right: 1px solid black;border-bottom: 1px solid black;padding: 4px 5px;text-align: center;"></td>
 							</tr>
 						</tbody>
 					</table>
