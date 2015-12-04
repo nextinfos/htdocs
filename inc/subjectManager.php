@@ -418,7 +418,7 @@ function getRegSubList(){
 <?php if($result) if($error) echo '<span class="error">'.$result.'</span>'; else echo '<span class="pass">'.$result.'</span>';?>
 	<form method="POST" id="studentRegistrar">
 	<div id="formHolder">
-<!-- 		<div><input type="button" value="ลงทะเบียนแพกเกจ"></div> -->
+<!-- 		<div><input type="button" value="ลงทะเบียนแพกเกจ"></div>  -->
 		<div class="spacer"></div>
 		<div class="leftCell">ภาคการศึกษา : </div>
 		<div id="term"><input type="radio" name="term" id="t1" value="1"<?php echo radioTerm(1);?>/><label for="t1">1</label><input type="radio" name="term" id="t2" value="2"/><label for="t2">2</label><input type="radio" name="term" id="t3" value="3"/><label for="t3">3</label></div>
