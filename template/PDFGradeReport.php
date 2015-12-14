@@ -146,9 +146,9 @@
 					<div class="signSpace" style="padding-top: 30px;text-align: center;width: 100%;"><br/><br/>ลงชื่อ ...............................................................</div>
 					<div style="text-align: center;width: 100%;">(<?php echo $data['director'];?>)</div>
 					<div style="text-align: center;width: 100%;">ผู้อำนวยการโรงเรียน</div>
-					<div class="signSpace" style="padding-top: 30px;text-align: center;width: 100%;"><br/><br/>ลงชื่อ ...............................................................</div>
-					<div style="text-align: center;width: 100%;">(<span class="signName" style="color:white;"><?php for($i=0;$i<55;$i++){echo '.';}?></span>)</div>
-					<div style="text-align: center;width: 100%;">ผู้ปกครอง</div>
+<!-- 					<div class="signSpace" style="padding-top: 30px;text-align: center;width: 100%;"><br/><br/>ลงชื่อ ...............................................................</div> -->
+<!-- 					<div style="text-align: center;width: 100%;">(<span class="signName" style="color:white;"><?php //for($i=0;$i<55;$i++){echo '.';}?></span>)</div> -->
+<!-- 					<div style="text-align: center;width: 100%;">ผู้ปกครอง</div> -->
 				</div>
 						</td>
 					</tr>
