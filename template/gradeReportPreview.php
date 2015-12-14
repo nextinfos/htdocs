@@ -617,9 +617,9 @@
 					<div class="signSpace">ลงชื่อ ................................................................</div>
 					<div>(<?php echo $data['director'];?>)</div>
 					<div>ผู้อำนวยการโรงเรียน</div>
-					<div class="signSpace">ลงชื่อ ................................................................</div>
-					<div>(<span class="signName" style="color:white;"><?php for($i=0;$i<55;$i++){echo '.';}?></span>)</div>
-					<div>ผู้ปกครอง</div>
+<!-- 					<div class="signSpace">ลงชื่อ ................................................................</div> -->
+<!-- 					<div>(<span class="signName" style="color:white;"><?php //for($i=0;$i<55;$i++){echo '.';}?></span>)</div> -->
+<!-- 					<div>ผู้ปกครอง</div> -->
 				</div>
 			</div>
 		</div>

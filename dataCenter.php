@@ -1199,16 +1199,9 @@ if($action=="get"){
 							if($row['score']=='') $preData['score'] = 0;
 							$grade = gradeCal(0,$max,0,$row['score']);
 							$select = '<select name="grade" style="width: 80px;">';
-							$select.= '<option value="">--</option>';
-							$select.= '<option value="4"'.selected($grade, '4').'>4.0</option>';
-							$select.= '<option value="3.5"'.selected($grade, '3.5').'>3.5</option>';
-							$select.= '<option value="3"'.selected($grade, '3').'>3.0</option>';
-							$select.= '<option value="2.5"'.selected($grade, '2.5').'>2.5</option>';
-							$select.= '<option value="2"'.selected($grade, '2').'>2.0</option>';
-							$select.= '<option value="1.5"'.selected($grade, '1.5').'>1.5</option>';
-							$select.= '<option value="1"'.selected($grade, '1').'>1.0</option>';
-							$select.= '<option value="0"'.selected($grade, '0').'>0</option>';
-							$select.= '<option value="W"'.selected($grade, 'W').'>W</option>';
+// 							$select.= '<option value="">--</option>';
+							$select.= '<option value="'.$grade.'" selected>'.$grade.'</option>';
+							$select.= '<option value="W">W</option>';
 							$select.= '</select>';
 							$preData['grade'] = '<input type="hidden" name="studentID" value="'.$row['studentID'].'">'.$select;
 							$preData['score'] = $preData['score'].'/'.$maxScore;
@@ -1228,6 +1221,28 @@ if($action=="get"){
 			}
 		}
 		echo json_encode($return);
+	} elseif($type=="studentStatus"){
+		$studentID = $_REQUEST['studentID'];
+		$data = '';
+		$strSQL = sprintf(
+				"
+				SELECT
+					status
+				FROM
+					student
+				WHERE
+					studentID = '%s'
+				",
+				mysql_real_escape_string($studentID)
+				);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery&&mysql_num_rows($objQuery)>0){
+			$row = mysql_fetch_assoc($objQuery);
+			$data .= '<option value="NORMAL"'.selected($row['status'], 'NORMAL').'>ปกติ</option>';
+			$data .= '<option value="GRADUATE" '.selected($row['status'], 'GRADUATE').'>สำเร็จการศึกษา</option>';
+			$data .= '<option value="SUSPEND"'.selected($row['status'], 'SUSPEND').'>พ้นสภาพ</option>';
+		}
+		echo $data;
 	}
 } elseif($action=="set"){
 	if($type=="atdList"){
@@ -1569,6 +1584,29 @@ if($action=="get"){
 			$result['status'] = 'UNVALID';
 		}
  		echo json_encode($result);
+	} elseif($type=="studentStatus"){
+		$studentID = $_REQUEST['studentID'];
+		$status = $_REQUEST['status'];
+		$data = '';
+		$strSQL = sprintf(
+				"
+				UPDATE
+					`student`
+				SET
+					`status` = '%s'
+				WHERE
+					`studentID` = '%s'
+				",
+				mysql_real_escape_string($status),
+				mysql_real_escape_string($studentID)
+				);
+		$objQuery = mysql_query($strSQL);
+		if($objQuery){
+			$data.='SUCCESS';
+		} else {
+			$data.="FAIL\n".$strSQL;
+		}
+		echo $data;
 	}
 } else {
 ?>

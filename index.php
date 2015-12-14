@@ -390,6 +390,14 @@
  	                backColor: "rgba(20,20,20,0.7)",
  	                borderColor: "rgba(200,200,200,0.1)"
  	 			});
+ 	 			buttonsModel = new Array();
+ 	 			buttonsModel.push({ text: "เพิ่มข้อมูล", click: function (e, obj) { window.location.href = '?action=studentManager&tag=add'; } , cssIcon: "fa icon-personadd", cssLabel: "", cssItem: "itemRadial" });
+ 	 			buttonsModel.push({ text: "อัพเดทสถานะ", click: function (e, obj) { window.location.href = '?action=studentStatus'; } , cssIcon: "fa icon-pencil", cssLabel: "", cssItem: "itemRadial" });
+ 	 			$("#studentMan").ninjaRadial({
+ 	 			     buttons: buttonsModel,
+ 	                backColor: "rgba(20,20,20,0.7)",
+ 	                borderColor: "rgba(200,200,200,0.1)"
+ 	 			});
  			});
  			setInterval(function(){
  				$.post('index.php',{systemErrorCheck: '1'},function(data){
@@ -452,7 +460,7 @@
 				<?php		if($confSuperUser=="1"){?>
 				<a href="#" class="icon-book" id="menuSubject">จัดการรายวิชา</a>
 				<a href="#" class="icon-persons" id="regSubject">ลงทะเบียนนร.</a>
-				<a href="?action=studentManager&tag=add" class="icon-personadd">เพิ่มข้อมูลนร.</a>
+				<a href="#" id="studentMan" class="icon-persons">จัดการข้อมูลนร.</a>
 				<a href="?action=instructorManager&tag=add" class="icon-personadd">เพิ่มข้อมูลครู</a>
 				<?php 		} else {?>
 				<a href="?action=atd" class="icon-book">การลงเวลาเรียน</a>
