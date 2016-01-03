@@ -17,6 +17,7 @@
 					sub.subjectID,
 					sub.name,
 					sub.type,
+					sub.weight,
 					stu.firstName,
 					stu.lastName,
 					stu.gender,
@@ -37,6 +38,7 @@
 					regstu.subjectID = sub.subjectID AND
 					regstu.studentID = '%s' AND
 					regstu.studentID = stu.studentID AND
+					regstu.registerID = regsub.registerID AND
 					regstu.registerID = (
 						SELECT
 							registerID
@@ -208,7 +210,8 @@
 				$predata['subjectID'] = $row['subjectID'];
 				$predata['subjectName'] = $row['name'];
 				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
-				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				$predata['weight'] = $row['weight'];
+				$countRegBasic += $predata['weight'];
 				if($grade!='W'&&$grade!='0')
 				$countBasic += $predata['weight'];
 				$predata['durningScore'] = $durningScore;
@@ -219,6 +222,7 @@
 	// 			$predata['finalScore'] =  ($afterMidScore+$finalScore).'/'.($maxAfterMidScore+$maxFinalScore);
 				$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
 				$predata['grade'] = $grade;
+				$GPACal += ($row['weight']*$grade);
 				if($_REQUEST['pdf']=='1'){
 					$predata['beg'] = $predata['grade']=='0'?'':'';
 				} else {
@@ -230,7 +234,7 @@
 				$predata['subjectID'] = $row['subjectID'];
 				$predata['subjectName'] = $row['name'];
 				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
-				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				$predata['weight'] = $row['weight'];
 				$countRegBasic += $predata['weight'];
 				$predata['durningScore'] = '--';
 				$predata['midScore'] = '--';
@@ -249,6 +253,7 @@
 					sub.subjectID,
 					sub.name,
 					sub.type,
+					sub.weight,
 					stu.firstName,
 					stu.lastName,
 					stu.gender,
@@ -269,6 +274,7 @@
 					regstu.subjectID = sub.subjectID AND
 					regstu.studentID = '%s' AND
 					regstu.studentID = stu.studentID AND
+					regstu.registerID = regsub.registerID AND
 					regstu.registerID = (
 						SELECT
 							registerID
@@ -412,7 +418,8 @@
 				$predata['subjectID'] = $row['subjectID'];
 				$predata['subjectName'] = $row['name'];
 				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
-				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				$predata['weight'] = $row['weight'];
+				$countRegExtra += $predata['weight'];
 				if($grade!='W'&&$grade!='0')
 				$countExtra += $predata['weight'];
 				$predata['durningScore'] = $durningScore;
@@ -423,6 +430,7 @@
 				// 			$predata['finalScore'] =  ($afterMidScore+$finalScore).'/'.($maxAfterMidScore+$maxFinalScore);
 				$predata['totalScore'] = $predata['totalDurningScore']+$predata['finalScore'];
 				$predata['grade'] = $grade;
+				$GPACal += ($row['weight']*$grade);
 				if($_REQUEST['pdf']=='1'){
 					$predata['beg'] = $predata['grade']=='0'?'':'';
 				} else {
@@ -434,7 +442,7 @@
 				$predata['subjectID'] = $row['subjectID'];
 				$predata['subjectName'] = $row['name'];
 				$predata['hour'] = $row['type']=='BASIC'?'60':'40';
-				$predata['weight'] = $row['type']=='BASIC'?'1.5':'1';
+				$predata['weight'] = $row['weight'];
 				$countRegExtra += $predata['weight'];
 				$predata['durningScore'] = '--';
 				$predata['midScore'] = '--';
@@ -467,7 +475,7 @@
 	$totalReg = $countRegBasic+$countRegExtra;
 	$totalGain = $countBasic+$countExtra;
 	if($GPAStatus){
-	
+		$GPA = number_format(round(($GPACal/$totalReg),2),2);
 	} else {
 		$GPA = '--';
 	}

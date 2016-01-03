@@ -426,6 +426,7 @@ if($action=="get"){
 	} elseif($type=="stuScoList"){
 		$subjectID = $_REQUEST['subjectID'];
 		$scoreType = $_REQUEST['scoreType'];
+		$addStatus = $_REQUEST['addStatus'];
 		$instructorID = $confUserID;
 		$term = getTerm();
 		$year = getYear();
@@ -456,13 +457,14 @@ if($action=="get"){
 							'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'">'.$select
 					);
 				} else {
+					$dataScore = $addStatus=='1'?'':getScore($scoreID,$row['studentID']);
 					$data['data'][] = array(
 							'cardID'=>'<span style="display:none;">'.$row['cardID'].'</span>',
 							'secondCardID'=>'<span style="display:none;">'.$row['secondCardID'].'</span>',
 							'studentID'=>$row['studentID'],
 							'firstName'=>$row['firstName'],
 							'lastName'=>$row['lastName'],
-							'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" value="'.getScore($scoreID,$row['studentID']).'" />'
+							'score'=>'<input type="hidden" name="studentID" value="'.$row['studentID'].'"><input type="text" name="score" value="'.$dataScore.'" />'
 					);
 				}
 			}

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 	$type = $_GET['type']; 
 	function getPercentile($array){
 		if(isset($array)&&sizeof($array)>0){
@@ -454,7 +454,7 @@
 					<div class="leftCell">ปีการศึกษา : </div>
 					<div>
 						<select name="year" id="year">
-							<?php $year = date("Y"); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
+							<?php $year = getYear(); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
 						</select>
 					</div>
 					<div class="spacer"></div>
@@ -720,7 +720,7 @@
 				<div class="leftCell">ปีการศึกษา : </div>
 				<div>
 					<select name="year" id="year">
-						<?php $year = date("Y"); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
+						<?php $year = getYear(); for($i=$year;$i<=($year+3);$i++){ echo '<option value="'.$i.'"';if($year==$i) echo ' selected';echo '>'.($i+543).'</option>';}?>
 					</select>
 				</div>
 				<div class="spacer"></div>

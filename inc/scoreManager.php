@@ -163,6 +163,7 @@
 					d.subjectID = $( "#subject" ).val();
 					d.scoreID = $( "#scoreInfoSelector" ).val();
 					d.scoreType = $( "#scoreType" ).val();
+					d.addStatus = $( '#addStatus' ).val();
 				}
 			}
 		});
