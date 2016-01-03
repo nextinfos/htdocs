@@ -1,5 +1,9 @@
 <script>
 	$(function(){
+		$( "#spinner" ).spinner({
+		      step: 0.5,
+		      numberFormat: "n"
+		    });
 		$('#pageName').text('จัดการรายวิชา');
 		$('input:text, input:password').button().css({
 			'font' : 'inherit',
@@ -23,15 +27,16 @@
 	if($tag=='add'){
 		$subjectID=$_POST['subjectID'];
 		$subjectName=$_POST['subjectName'];
+		$subjectWeight=$_POST['subjectWeight'];
 		$subjectType=$_POST['subjectType'];
-		if($subjectID&&$subjectName&&$subjectType){
+		if($subjectID&&$subjectName&&$subjectWeight&&$subjectType){
 			$error=0;
 			if(!preg_match('#[A-Za-zก-ฮ]+[0-9]{5}$#', $subjectID)){
 				$error+=1;
 				$reason .= 'กรุณากรอกรหัสวิชา โดยขึ้นต้นด้วยตัวอักษร 1 ตัว แล้วตามด้วยตัวเลข 5 หลัก เช่น "ท21101".';
 			}
 			if($error==0){
-				$strSQL = 'INSERT INTO subject VALUES ("'.$subjectID.'","'.$subjectName.'","'.$subjectType.'")';
+				$strSQL = 'INSERT INTO subject VALUES ("'.$subjectID.'","'.$subjectName.'","'.$subjectType.'","'.$subjectWeight.'")';
 				$objQuery = mysql_query($strSQL);
 				if($objQuery) $reason = '<h3 style="color:green;margin-bottom: 2px;">เพิ่มวิชาเรียนเรียบร้อย</h3><span>'.$subjectID.' '.$subjectName.'</span>'; else {
 					$strSQL = 'SELECT * FROM `subject` WHERE `subjectID` = "'.$subjectID.'"';
@@ -59,6 +64,9 @@
 			<div class="spacer"></div>
 			<div class="leftCell">ชื่อวิชา : </div>
 			<div><input type="text" name="subjectName" placeholder="ภาษาไทย 1" required /></div>
+			<div class="spacer"></div>
+			<div class="leftCell">จำนวนหน่วยกิต : </div>
+			<div><input type="number" id="spinner" name="subjectWeight"  placeholder="1.5" required /></div>
 			<div class="spacer"></div>
 			<div class="leftCell">ประเภท :</div> 
 			<div>
