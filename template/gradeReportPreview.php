@@ -11,6 +11,8 @@
 	$countExtra=0;
 	$GPAStatus = true;
 	$GPACal = 0;
+// Pre Set Var
+	$preName = $gradeYear = $firstName = $lastName = $insFirstName = $insLastName = $durningScore = $maxFoundMid = $maxBeforeMidScore = $maxMidScore = $maxAfterMidScore = $maxFinalScore = $foundMid = $beforeMidScore = $midScore = $afterMidScore = $finalScore = NULL;
 	$strSQL = sprintf(
 			"
 				SELECT
