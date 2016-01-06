@@ -6,13 +6,15 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>ระบบถ่ายภาพ</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 		<link href="scripts/jquery-ui/jquery-ui.css" rel="stylesheet">
 		<link href="scripts/jquery-ui/dataTables/jquery.dataTables.css" rel="stylesheet">
 		<script src="scripts/jquery-ui/external/jquery/jquery.js"></script>
  		<script src="scripts/jquery-ui/jquery-ui.js"></script>
  		<style>
- 			body {
+ 			body,html {
  				margin: 0px;
+                width: 400px;
  			}
  			#video {
  				position: relative;
@@ -20,6 +22,7 @@
  				left: 0px;
  				max-width: 400px;
  				height: 400px;
+                min-width: 100%;
  			}
  			#videoWrapper {
  				position: relative;
@@ -104,6 +107,14 @@
 			#preview,#previewWrapper {
 				display: none;
 			}
+            #userid {
+                width: 400px;
+                height: 50px;
+                font-size: 2em;
+                position: absolute;
+                top: 400px;
+                left: 0px;
+            }
  		</style>
 	</head>
 	<body>
@@ -318,19 +329,21 @@
          <span id=uploaded  style="display:none;"> Success, your photo has been uploaded! 
                 <a href="javascript:history.go(-1)"> Return </a> </span> 
  </div>
- <select id="videoSource"></select>
- <?php
-	if($_GET['classID']){
-		$res = '<select id="userid">';
-		
-		$res .= '</select>';
-		echo $res;
-	} elseif($_GET['studentID']){
-		echo '<input type="text" id="userid" value="'.$_GET['studentID'].'">';
-	} else {
-		echo '<input type="text" id="userid">';
-	}
+ <div>
+  <?php
+    if($_GET['classID']){
+        $res = '<select id="userid">';
+        
+        $res .= '</select>';
+        echo $res;
+    } elseif($_GET['studentID']){
+        echo '<input type="text" id="userid" value="'.$_GET['studentID'].'">';
+    } else {
+        echo '<input type="text" id="userid">';
+    }
 ?>
+</div>
+ <select id="videoSource"></select>
  <input type="file" accept="image/*" id="fileSelect" name="fileSelect">
   </div>
   <script>
