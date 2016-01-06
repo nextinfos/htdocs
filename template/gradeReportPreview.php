@@ -60,24 +60,24 @@
 	$objQuery = mysql_query($strSQL);
 	if($objQuery&&mysql_num_rows($objQuery)){
 		while($row=mysql_fetch_assoc($objQuery)){
+			$preName = $row['gender'];
+			$gradeYear = $row['gradeYear'];
+			$firstName = $row['firstName'];
+			$lastName = $row['lastName'];
+			$insFirstName = $row['insFirstName'];
+			$insLastName = $row['insLastName'];
+			$durningScore = NULL;
+			$maxFoundMid = false;
+			$maxBeforeMidScore = 0;
+			$maxMidScore = 0;
+			$maxAfterMidScore = 0;
+			$maxFinalScore = 0;
+			$foundMid = false;
+			$beforeMidScore = 0;
+			$midScore = 0;
+			$afterMidScore = 0;
+			$finalScore = 0;
 			if(isset($row['grade'])||$row['grade']!=''){
-				$preName = $row['gender'];
-				$gradeYear = $row['gradeYear'];
-				$firstName = $row['firstName'];
-				$lastName = $row['lastName'];
-				$insFirstName = $row['insFirstName'];
-				$insLastName = $row['insLastName'];
-				$durningScore = NULL;
-				$maxFoundMid = false;
-				$maxBeforeMidScore = 0;
-				$maxMidScore = 0;
-				$maxAfterMidScore = 0;
-				$maxFinalScore = 0;
-				$foundMid = false;
-				$beforeMidScore = 0;
-				$midScore = 0;
-				$afterMidScore = 0;
-				$finalScore = 0;
 				$strSQL2 = sprintf(
 						"
 						SELECT
