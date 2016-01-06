@@ -163,5 +163,5 @@
 	$pdf = new mPDF('th', 'A4', '0', '','0','0','5','5'); //การตั้งค่ากระดาษถ้าต้องการแนวตั้ง ก็ A4 เฉยๆครับ ถ้าต้องการแนวนอนเท่ากับ A4-L
 	$pdf->SetDisplayMode('fullpage');
 	$pdf->WriteHTML($html, 2);
-	$pdf->Output();
+	$pdf->Output("Grade Report $studentID($term-$year).pdf",'D');
 ?>
